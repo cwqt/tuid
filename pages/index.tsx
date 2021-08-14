@@ -2,17 +2,18 @@ import { useStore } from "../data/store";
 import React, { useEffect } from "react";
 import Sidebar from "../components/sidebar";
 import Terminal from "../components/terminal";
+import color from "../data/color";
 
 /**
  * sidebar
- *   add/remove characters, special chars etc
- *      select character, click terminal grid
- *   set foreground & background colour
- *   vary dimensions of the terminal
- *   change color palette & have change affect terminal
+ *   [ ] add/remove characters, special chars etc
+ *   [ ]    select character, click terminal grid
+ *   [ ] set foreground & background colour
+ *   [ ] vary dimensions of the terminal
+ *   [ ] change color palette & have change affect terminal
  *
  * terminal
- *   2d grid with monospace characters
+ *   [x] 2d grid with monospace characters
  */
 
 import dynamic from "next/dynamic";
@@ -27,8 +28,8 @@ export default function Home() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar className="w-1/4 h-full p-4"></Sidebar>
-      <TerminalNoSSR className="w-3/4 h-full"></TerminalNoSSR>
+      <Sidebar className="h-full p-4 m-4 shadow"></Sidebar>
+      <TerminalNoSSR className="h-full"></TerminalNoSSR>
     </div>
   );
 }

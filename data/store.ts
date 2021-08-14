@@ -14,7 +14,7 @@ export const createMatrixSquare = (
 ): IMatrixSquare => ({
   character: square.character ?? " ",
   foreground: square.foreground || "#fff",
-  background: square.background || "#000",
+  background: square.background || "transparent",
   underlined: square.underlined ?? false,
   bold: square.bold ?? false,
   italic: square.italic ?? false,
@@ -28,6 +28,7 @@ export const createMatrixSquare = (
 // [[],[],[]]
 // matrix[y][x]
 type TerminalMatrix = IMatrixSquare[][];
+type Depth = "foreground" | "background";
 
 export const useStore = create<{
   matrix: TerminalMatrix;
@@ -37,6 +38,10 @@ export const useStore = create<{
     y: number,
     data: Partial<IMatrixSquare>
   ) => void;
+  selectedColor: string;
+  setSelectedColor: (color: string) => void;
+  selectedDepth: Depth;
+  setSelectedDepth: (depth: Depth) => void;
 }>((set) => ({
   matrix: [],
   setMatrix: (width, height) =>
@@ -46,10 +51,17 @@ export const useStore = create<{
         Array.from({ length: width }, createMatrixSquare)
       ),
     })),
-
   setMatrixSquareProperty: (x, y, data) =>
     set((state) => {
       state.matrix[y][x] = { ...state.matrix[y][x], ...data };
       return state;
     }),
+
+  selectedColor: "#000",
+  setSelectedColor: (color) =>
+    set((state) => ({ ...state, selectedColor: color })),
+
+  selectedDepth: "foreground",
+  setSelectedDepth: (depth) =>
+    set((state) => ({ ...state, selectedDepth: depth })),
 }));
