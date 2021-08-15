@@ -7,7 +7,9 @@ import { Button, ButtonGroup } from "@chakra-ui/react";
 import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
 import { Switch, FormControl, FormLabel } from "@chakra-ui/react";
 
-export default function Sidebar(props: { className?: string }) {
+import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+
+export default function InputSidebar(props: { className?: string }) {
   const {
     editor,
     setEditorProperties,
@@ -18,11 +20,7 @@ export default function Sidebar(props: { className?: string }) {
   const grid = color.grid(14, 8);
 
   return (
-    <div className={cx(props.className, "bg-white")}>
-      <Heading as="h1">tui designer</Heading>
-
-      <p className="my-2">https://gitlab.com/cxss/tui-designer</p>
-
+    <div>
       <div className="flex items-center justify-between">
         <Heading as="h2" size="lg">
           Colors
@@ -152,8 +150,6 @@ export default function Sidebar(props: { className?: string }) {
           );
         })}
       </div>
-
-      <br />
     </div>
   );
 }

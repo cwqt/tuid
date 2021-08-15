@@ -1,22 +1,22 @@
-import { useStore } from "../data/store";
-import React, { useEffect } from "react";
-import Sidebar from "../components/sidebar";
-import Terminal from "../components/terminal";
-import color from "../data/color";
-
 /**
  * sidebar
- *   [ ] add/remove characters, special chars etc
- *   [ ]    select character, click terminal grid
- *   [ ] set foreground & background colour
+ *   [x] add/remove characters, special chars etc
+ *   [x] set foreground & background colour
+ *   [x] set font styling; bold, italic, underline, strikeout
  *   [ ] vary dimensions of the terminal
- *   [ ] change color palette & have change affect terminal
+ *   [x] change color palette & have change affect terminal
  *
  * terminal
  *   [x] 2d grid with monospace characters
+ *   [ ] select region
+ *       [ ] apply style across selected region
+ *       [ ] drag to move all characters in selected region
  */
 
 import dynamic from "next/dynamic";
+import React, { useEffect } from "react";
+import Sidebar from "../components/sidebar/sidebar";
+import { useStore } from "../data/store";
 
 const TerminalNoSSR = dynamic(() => import("../components/terminal"), {
   ssr: false,
