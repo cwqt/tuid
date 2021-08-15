@@ -20,14 +20,13 @@ export const createMatrixSquare = (
   italic: square.italic ?? false,
 });
 
-// matrix[x][y]
 // x ---->     y
 // [[],[],[]]  |
 // [[],[],[]]  |
 // [[],[],[]]  v
 // [[],[],[]]
 // matrix[y][x]
-export type TerminalMatrix = IMatrixSquare[][];
+export type TerminalMatrix = (IMatrixSquare | undefined)[][];
 export type TerminalDepth = "foreground" | "background";
 
 export interface IEditorOptions {

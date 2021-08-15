@@ -3,7 +3,10 @@ import { css, cx } from "@emotion/css";
 import { IMatrixSquare } from "data/interfaces";
 import { memo } from "react";
 
-type UiMatrixSquare = IMatrixSquare & { is_bordered: boolean };
+type UiMatrixSquare = IMatrixSquare & {
+  is_bordered: boolean;
+  className: string;
+};
 
 export const MatrixSquare = memo(
   forwardRef((props: UiMatrixSquare, ref) => {
@@ -11,6 +14,7 @@ export const MatrixSquare = memo(
       <span
         ref={ref}
         className={cx(
+          props.className,
           "font-mono leading-4",
           css({
             border: `${props.is_bordered ? 1 : 0}px solid white`,

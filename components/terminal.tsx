@@ -1,3 +1,4 @@
+import { css, cx } from "@emotion/css";
 import useMouse from "@react-hook/mouse-position";
 import classnames from "classnames";
 import { clamp, useKeyPress } from "data/helpers";
@@ -20,8 +21,8 @@ export default function Terminal(props: { className?: string }) {
   // which grid square the mouse is lies over
   const mouseRef = useRef(null);
   const mouse = useMouse(mouseRef, {
-    leaveDelay: 500,
-    enterDelay: 500,
+    leaveDelay: 0,
+    enterDelay: 0,
     fps: 60,
   });
 
@@ -168,7 +169,9 @@ export default function Terminal(props: { className?: string }) {
       if (selectedSpecialCharacter) {
         setMatrixSquareProperty(x, y, { character: selectedSpecialCharacter });
       } else {
-        setMatrixSquareProperty(x, y, { character: matrix[y][x].character });
+        setMatrixSquareProperty(x, y, {
+          character: matrix[y][x]?.character || " ",
+        });
       }
     }
   };
@@ -183,24 +186,61 @@ export default function Terminal(props: { className?: string }) {
           ref={hiddenSquareRef}
           {...hiddenSquareProps}
         ></MatrixSquare>
-
+        {cursor.x} {cursor.y}
         <div
           id="terminal"
-          className="bg-gray-800 p-4 rounded-md shadow"
+          className="bg-gray-800 p-4 rounded-md shadow "
           onClick={insertSpecialCharacter}
         >
           {/* has no padding, so no need to do any offset calculations to find grid square */}
-          <div ref={mouseRef}>
+          {/* all matrix squares are positioned relative to this container, offsetted by their x & y value */}
+          <div
+            ref={mouseRef}
+            className={cx(
+              "relative border border-gray-600",
+              css({
+                width: `${matrix[0].length * width}px`,
+                height: `${matrix.length * height}px`,
+              })
+            )}
+          >
+            {/* don't show cursor character outside the border of the dimensions */}
+            {0 <= cursor.x &&
+              cursor.x < matrix[0].length &&
+              0 <= cursor.y &&
+              cursor.y < matrix.length && (
+                <MatrixSquare
+                  className={cx(
+                    "absolute",
+                    css({
+                      left: `${cursor.x * width}px`,
+                      top: `${cursor.y * height}px`,
+                    })
+                  )}
+                  {...hiddenSquareProps}
+                  character=" "
+                  is_bordered={true}
+                ></MatrixSquare>
+              )}
+
             {matrix.map((row, y) => {
               return (
                 <div key={`column-${y}`} className="flex">
                   {row.map((column, x) => {
                     return (
-                      <MatrixSquare
-                        key={`${x}-${y}`}
-                        {...column}
-                        is_bordered={cursor.x == x && cursor.y == y}
-                      ></MatrixSquare>
+                      matrix[y][x] != undefined && (
+                        <MatrixSquare
+                          className={cx(
+                            "absolute",
+                            css({
+                              left: `${x * width}px`,
+                              top: `${y * height}px`,
+                            })
+                          )}
+                          key={`${x}-${y}`}
+                          {...column}
+                        ></MatrixSquare>
+                      )
                     );
                   })}
                 </div>

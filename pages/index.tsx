@@ -11,7 +11,7 @@
  *   [ ] select region
  *       [ ] apply style across selected region
  *       [ ] drag to move all characters in selected region
- */
+ *  */
 
 import dynamic from "next/dynamic";
 import React, { useEffect } from "react";
@@ -24,11 +24,12 @@ const TerminalNoSSR = dynamic(() => import("../components/terminal"), {
 
 export default function Home() {
   const setMatrix = useStore((state) => state.setMatrix);
-  useEffect(() => setMatrix(10, 10));
+  // useEffect(() => setMatrix(64, 32));
+  useEffect(() => setMatrix(202, 64));
 
   return (
     <div className="flex h-screen w-screen bg-gray-300">
-      <Sidebar className="p-4 m-4 shadow rounded"></Sidebar>
+      <Sidebar className="p-4 m-4 shadow rounded w-1/4"></Sidebar>
       <TerminalNoSSR className="h-full"></TerminalNoSSR>
     </div>
   );

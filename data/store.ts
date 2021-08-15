@@ -6,6 +6,14 @@ import {
   createMatrixSquare,
 } from "./interfaces";
 
+// matrix is a 2d array, filled with holes of undefined
+// [_,_,_,a,b,c],
+// [d,e,f,_,_,_]
+// [_,_,_,_,_,_]
+// [_,_,_,h,i,j]
+// only rendering filled holes saves us a tonne
+// on memory & rendering speed
+
 export const useStore = create<{
   matrix: TerminalMatrix;
   setMatrix: (width: number, height: number) => void;
@@ -28,11 +36,9 @@ export const useStore = create<{
         // on initial load, matrix length will be 0x0, so create a fresh matrix
         state.matrix.length == 0
           ? Array.from({ length: height }, () =>
-              Array.from({ length: width }, createMatrixSquare)
+              Array.from({ length: width }, () => undefined)
             )
           : state.matrix;
-
-      console.log(matrix == state.matrix);
 
       // if matrix was not starting from 0x0, then this matrix == state.matrix
       if (matrix == state.matrix) {
@@ -45,7 +51,7 @@ export const useStore = create<{
             // height incremented
             matrix = state.matrix.concat(
               Array.from({ length: height - state.matrix.length }, () =>
-                Array.from({ length: width }, createMatrixSquare)
+                Array.from({ length: width }, () => undefined)
               )
             );
           }
@@ -62,15 +68,13 @@ export const useStore = create<{
               matrix[y] = state.matrix[y].concat(
                 Array.from(
                   { length: width - state.matrix[y].length },
-                  createMatrixSquare
+                  () => undefined
                 )
               );
             }
           }
         }
       }
-
-      console.log(matrix);
 
       return {
         ...state,
@@ -79,22 +83,24 @@ export const useStore = create<{
     }),
   setMatrixSquareProperty: (x, y, data) =>
     set((state) => {
-      state.matrix[y][x] = {
-        ...state.matrix[y][x],
-        underline: state.editor.underline,
-        bold: state.editor.bold,
-        strikeout: state.editor.strikeout,
-        italic: state.editor.italic,
-        foreground:
-          state.editor.depth == "foreground"
-            ? state.editor.color
-            : state.matrix[y][x].foreground,
-        background:
-          state.editor.depth == "background"
-            ? state.editor.color
-            : state.matrix[y][x].background,
-        ...data,
-      };
+      state.matrix[y][x] = state.matrix[y][x]
+        ? {
+            ...state.matrix[y][x],
+            underline: state.editor.underline,
+            bold: state.editor.bold,
+            strikeout: state.editor.strikeout,
+            italic: state.editor.italic,
+            foreground:
+              state.editor.depth == "foreground"
+                ? state.editor.color
+                : state.matrix[y][x].foreground,
+            background:
+              state.editor.depth == "background"
+                ? state.editor.color
+                : state.matrix[y][x].background,
+            ...data,
+          }
+        : createMatrixSquare(data);
       return state;
     }),
 

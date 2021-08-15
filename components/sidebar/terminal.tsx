@@ -12,7 +12,7 @@ import { useStore } from "data/store";
 export default function TerminalSidebar(props: { className?: string }) {
   const { matrix, setMatrix } = useStore();
 
-  const [MAX_WIDTH, MAX_HEIGHT] = [100, 100];
+  const [MAX_WIDTH, MAX_HEIGHT] = [202, 64];
 
   return (
     <div>
@@ -24,7 +24,7 @@ export default function TerminalSidebar(props: { className?: string }) {
             min={10}
             defaultValue={matrix[0]?.length || 0}
             onChange={(_, v) =>
-              v > 0 && v < MAX_WIDTH && setMatrix(v, matrix.length)
+              v > 0 && v <= MAX_WIDTH && setMatrix(v, matrix.length)
             }
           >
             <NumberInputField />
@@ -42,7 +42,7 @@ export default function TerminalSidebar(props: { className?: string }) {
             min={10}
             defaultValue={matrix.length}
             onChange={(_, v) =>
-              v > 0 && v < MAX_HEIGHT && setMatrix(matrix[0].length || 0, v)
+              v > 0 && v <= MAX_HEIGHT && setMatrix(matrix[0].length || 0, v)
             }
           >
             <NumberInputField />
@@ -54,6 +54,9 @@ export default function TerminalSidebar(props: { className?: string }) {
         </FormControl>
       </div>
       <small className="mt-2">
+        <p>
+          Max Width: {MAX_WIDTH}, Max Height: {MAX_HEIGHT}
+        </p>
         <b>n.b.</b> altering this value will destroy values beyond borders of
         previous dimensions
       </small>
