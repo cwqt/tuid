@@ -24,7 +24,7 @@ const TerminalNoSSR = dynamic(() => import("../components/terminal"), {
 
 export default function Home() {
   const setMatrix = useStore((state) => state.setMatrix);
-  useEffect(() => setMatrix(50, 30));
+  useEffect(() => setMatrix(10, 10));
 
   return (
     <div className="flex h-screen w-screen bg-gray-300">

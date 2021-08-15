@@ -24,7 +24,7 @@ export default function Sidebar(props: { className?: string }) {
     <div className={cx(props.className, "bg-white flex flex-col")}>
       <Heading as="h1">tui designer</Heading>
 
-      <Tabs isFitted>
+      <Tabs isFitted isLazy>
         <TabList>
           <Tab>Input</Tab>
           <Tab>Select</Tab>

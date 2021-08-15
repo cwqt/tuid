@@ -23,12 +23,60 @@ export const useStore = create<{
 }>((set) => ({
   matrix: [],
   setMatrix: (width, height) =>
-    set((state) => ({
-      ...state,
-      matrix: Array.from({ length: height }, () =>
-        Array.from({ length: width }, createMatrixSquare)
-      ),
-    })),
+    set((state) => {
+      let matrix: IMatrixSquare[][] =
+        // on initial load, matrix length will be 0x0, so create a fresh matrix
+        state.matrix.length == 0
+          ? Array.from({ length: height }, () =>
+              Array.from({ length: width }, createMatrixSquare)
+            )
+          : state.matrix;
+
+      console.log(matrix == state.matrix);
+
+      // if matrix was not starting from 0x0, then this matrix == state.matrix
+      if (matrix == state.matrix) {
+        // change in height
+        if (height != state.matrix.length) {
+          if (height < state.matrix.length) {
+            // height decremented
+            matrix = state.matrix.slice(0, height);
+          } else {
+            // height incremented
+            matrix = state.matrix.concat(
+              Array.from({ length: height - state.matrix.length }, () =>
+                Array.from({ length: width }, createMatrixSquare)
+              )
+            );
+          }
+        }
+
+        // change in width
+        if (width != state.matrix[0].length) {
+          for (let y = 0; y < matrix.length - 1; y++) {
+            if (width < matrix[y].length) {
+              // width decremented
+              matrix[y] = state.matrix[y].slice(0, width);
+            } else {
+              // width incremented
+              matrix[y] = state.matrix[y].concat(
+                Array.from(
+                  { length: width - state.matrix[y].length },
+                  createMatrixSquare
+                )
+              );
+            }
+          }
+        }
+      }
+
+      console.log(matrix);
+
+      return {
+        ...state,
+        matrix,
+      };
+    }),
   setMatrixSquareProperty: (x, y, data) =>
     set((state) => {
       state.matrix[y][x] = {
