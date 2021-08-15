@@ -30,7 +30,7 @@ export default function InputSidebar(props: { className?: string }) {
           <span className="opacity-90 center">Active colour</span>
           <div
             className={cx(
-              "ml-2 w-6 h-6 rounded  border border-gray-300 ",
+              "ml-2 w-6 h-6 rounded  border border-gray-300",
               css({
                 backgroundColor: editor.color,
               })
@@ -49,9 +49,14 @@ export default function InputSidebar(props: { className?: string }) {
                     onClick={() => setEditorProperties({ color: column })}
                     key={ridx + cidx}
                     className={cx(
-                      "w-5 h-5 hover:scale-150 hover:z-10 overflow-visible transform transition duration-150 cursor-pointer",
+                      "w-5 h-5 hover:z-10 rounded-sm overflow-visible transform transition duration-150 cursor-pointer",
                       css({
                         backgroundColor: column,
+                        margin: "1px",
+                        ":hover": {
+                          border: "1px solid white",
+                          transform: "scale(2)",
+                        },
                       })
                     )}
                   ></div>

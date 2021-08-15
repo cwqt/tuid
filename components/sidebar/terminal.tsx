@@ -92,7 +92,7 @@ export default function TerminalSidebar(props: { className?: string }) {
       <FormControl id="terminal-height" className="mt-4">
         <FormLabel>Terminal background color</FormLabel>
         <InputGroup>
-          <InputLeftAddon children="#" />
+          <InputLeftAddon>#</InputLeftAddon>
           <Input
             placeholder="Hex code"
             defaultValue={hexCode}
