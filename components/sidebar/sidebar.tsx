@@ -22,7 +22,9 @@ import TerminalSidebar from "./terminal";
 export default function Sidebar(props: { className?: string }) {
   return (
     <div className={cx(props.className, "bg-white flex flex-col")}>
-      <Heading as="h1">tui designer</Heading>
+      <Heading as="h1" mb="4">
+        tui designer
+      </Heading>
 
       <Tabs isFitted isLazy>
         <TabList>

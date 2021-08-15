@@ -3,7 +3,7 @@
  *   [x] add/remove characters, special chars etc
  *   [x] set foreground & background colour
  *   [x] set font styling; bold, italic, underline, strikeout
- *   [ ] vary dimensions of the terminal
+ *   [x] vary dimensions of the terminal
  *   [x] change color palette & have change affect terminal
  *
  * terminal
@@ -24,8 +24,7 @@ const TerminalNoSSR = dynamic(() => import("../components/terminal"), {
 
 export default function Home() {
   const setMatrix = useStore((state) => state.setMatrix);
-  // useEffect(() => setMatrix(64, 32));
-  useEffect(() => setMatrix(202, 64));
+  useEffect(() => setMatrix(98, 59));
 
   return (
     <div className="flex h-screen w-screen bg-gray-300">

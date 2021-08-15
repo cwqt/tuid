@@ -22,7 +22,7 @@ export default function InputSidebar(props: { className?: string }) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <Heading as="h2" size="lg">
+        <Heading as="h2" size="md">
           Colors
         </Heading>
 
@@ -30,7 +30,7 @@ export default function InputSidebar(props: { className?: string }) {
           <span className="opacity-90 center">Active colour</span>
           <div
             className={cx(
-              "ml-2 w-6 h-6 rounded",
+              "ml-2 w-6 h-6 rounded  border border-gray-300 ",
               css({
                 backgroundColor: editor.color,
               })
@@ -76,7 +76,7 @@ export default function InputSidebar(props: { className?: string }) {
         <span>Background</span>
       </div>
 
-      <Heading as="h2" size="lg" className="mb-2 mt-2">
+      <Heading as="h2" size="md" className="my-4">
         Text options
       </Heading>
 
@@ -111,7 +111,7 @@ export default function InputSidebar(props: { className?: string }) {
         </Checkbox>
       </div>
 
-      <Heading as="h2" size="lg" className="mb-2">
+      <Heading as="h2" size="md" className="my-4">
         Special Characters
       </Heading>
 

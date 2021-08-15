@@ -1,3 +1,4 @@
+import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from "components/terminal";
 import create from "zustand";
 import {
   TerminalMatrix,
@@ -28,6 +29,9 @@ export const useStore = create<{
 
   selectedSpecialCharacter: string;
   setSelectedSpecialCharacter: (value: string) => void;
+
+  terminalBackgroundColor: string;
+  setTerminalBackgroundColor: (hex: string) => void;
 }>((set) => ({
   matrix: [],
   setMatrix: (width, height) =>
@@ -124,4 +128,8 @@ export const useStore = create<{
   selectedSpecialCharacter: "",
   setSelectedSpecialCharacter: (value) =>
     set((state) => ({ ...state, selectedSpecialCharacter: value })),
+
+  terminalBackgroundColor: DEFAULT_TERMINAL_BACKGROUND_COLOR,
+  setTerminalBackgroundColor: (hex) =>
+    set((state) => ({ ...state, terminalBackgroundColor: hex })),
 }));

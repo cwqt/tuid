@@ -8,9 +8,15 @@ import useDimensions from "react-use-dimensions";
 import { useStore } from "../data/store";
 import { MatrixSquare } from "./matrix-square";
 
+export const DEFAULT_TERMINAL_BACKGROUND_COLOR = "#1f2937";
+
 export default function Terminal(props: { className?: string }) {
-  const { matrix, setMatrixSquareProperty, selectedSpecialCharacter } =
-    useStore();
+  const {
+    matrix,
+    setMatrixSquareProperty,
+    selectedSpecialCharacter,
+    terminalBackgroundColor,
+  } = useStore();
   const [cursor, setCursor] = useState<{
     x: number;
     y: number;
@@ -178,18 +184,21 @@ export default function Terminal(props: { className?: string }) {
 
   return (
     <div>
-      <div className={classnames(props.className, "flex flex-col")}>
+      <div className={classnames(props.className, "flex flex-col m-4 ml-0")}>
         {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
         <MatrixSquare
-          className="opacity-0"
+          className="opacity-0 absolute"
           onClick={() => {}}
           ref={hiddenSquareRef}
           {...hiddenSquareProps}
         ></MatrixSquare>
-        {cursor.x} {cursor.y}
+
         <div
           id="terminal"
-          className="bg-gray-800 p-4 rounded-md shadow "
+          className={cx(
+            "p-4 rounded-md shadow",
+            css({ backgroundColor: terminalBackgroundColor })
+          )}
           onClick={insertSpecialCharacter}
         >
           {/* has no padding, so no need to do any offset calculations to find grid square */}
@@ -204,6 +213,7 @@ export default function Terminal(props: { className?: string }) {
               })
             )}
           >
+            {/* show a cursor MatrixSquare with all the styles currently  */}
             {/* don't show cursor character outside the border of the dimensions */}
             {0 <= cursor.x &&
               cursor.x < matrix[0].length &&
@@ -218,7 +228,7 @@ export default function Terminal(props: { className?: string }) {
                     })
                   )}
                   {...hiddenSquareProps}
-                  character=" "
+                  character={matrix[cursor.y][cursor.x]?.character || " "}
                   is_bordered={true}
                 ></MatrixSquare>
               )}

@@ -6,13 +6,41 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
+  Input,
+  InputGroup,
+  InputRightAddon,
+  InputLeftAddon,
 } from "@chakra-ui/react";
+import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from "components/terminal";
 import { useStore } from "data/store";
+import React from "react";
+import { useEffect } from "react";
+import { useState } from "react";
 
 export default function TerminalSidebar(props: { className?: string }) {
-  const { matrix, setMatrix } = useStore();
+  const {
+    matrix,
+    setMatrix,
+    terminalBackgroundColor,
+    setTerminalBackgroundColor,
+  } = useStore();
 
   const [MAX_WIDTH, MAX_HEIGHT] = [202, 64];
+
+  // store local copy of hex code to display error state of input
+  const [hexCode, setHexCode] = useState<string>(
+    terminalBackgroundColor.slice(1, terminalBackgroundColor.length)
+  );
+  const hexCodeRegex = /^([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i;
+
+  useEffect(() => {
+    // check the code is valid before actually setting the terminal background
+    if (hexCodeRegex.test(hexCode)) {
+      setTerminalBackgroundColor(`#${hexCode}`);
+    } else {
+      setTerminalBackgroundColor(DEFAULT_TERMINAL_BACKGROUND_COLOR);
+    }
+  }, [hexCode]);
 
   return (
     <div>
@@ -53,13 +81,26 @@ export default function TerminalSidebar(props: { className?: string }) {
           </NumberInput>
         </FormControl>
       </div>
-      <small className="mt-2">
-        <p>
-          Max Width: {MAX_WIDTH}, Max Height: {MAX_HEIGHT}
-        </p>
-        <b>n.b.</b> altering this value will destroy values beyond borders of
-        previous dimensions
-      </small>
+      <p className="mt-2 text-sm">
+        Max Width: {MAX_WIDTH}, Max Height: {MAX_HEIGHT}
+        <span className="opacity-50">
+          <b>n.b.</b> altering this value will destroy values beyond borders of
+          previous dimensions
+        </span>
+      </p>
+
+      <FormControl id="terminal-height" className="mt-4">
+        <FormLabel>Terminal background color</FormLabel>
+        <InputGroup>
+          <InputLeftAddon children="#" />
+          <Input
+            placeholder="Hex code"
+            defaultValue={hexCode}
+            isInvalid={!hexCodeRegex.test(hexCode)}
+            onChange={(e) => setHexCode(e.target.value)}
+          />
+        </InputGroup>
+      </FormControl>
     </div>
   );
 }
