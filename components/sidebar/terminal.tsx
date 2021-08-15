@@ -1,17 +1,42 @@
-import { Heading } from "@chakra-ui/react";
-import { css, cx } from "@emotion/css";
-import color from "data/color";
-import specialCharacters from "data/special-characters";
+import {
+  FormControl,
+  FormLabel,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+} from "@chakra-ui/react";
 import { useStore } from "data/store";
-import { Button, ButtonGroup } from "@chakra-ui/react";
-import { Checkbox, CheckboxGroup } from "@chakra-ui/react";
-import { Switch, FormControl, FormLabel } from "@chakra-ui/react";
 
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
-import InputSidebar from "./input";
-
-export default function SelectSidebar(props: { className?: string }) {
+export default function TerminalSidebar(props: { className?: string }) {
   const { editor, setEditorProperties } = useStore();
 
-  return <div></div>;
+  return (
+    <div>
+      <div className="flex">
+        <FormControl id="terminal-height">
+          <FormLabel>Width</FormLabel>
+          <NumberInput max={100} min={10}>
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+        </FormControl>
+
+        <FormControl id="terminal-height">
+          <FormLabel>Height</FormLabel>
+          <NumberInput max={100} min={10}>
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+        </FormControl>
+      </div>
+    </div>
+  );
 }

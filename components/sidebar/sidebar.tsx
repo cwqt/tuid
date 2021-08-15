@@ -17,6 +17,7 @@ import { cx } from "@emotion/css";
 import React from "react";
 import InputSidebar from "./input";
 import SelectSidebar from "./select";
+import TerminalSidebar from "./terminal";
 
 export default function Sidebar(props: { className?: string }) {
   return (
@@ -36,6 +37,9 @@ export default function Sidebar(props: { className?: string }) {
           </TabPanel>
           <TabPanel>
             <SelectSidebar></SelectSidebar>
+          </TabPanel>
+          <TabPanel>
+            <TerminalSidebar></TerminalSidebar>
           </TabPanel>
         </TabPanels>
       </Tabs>
