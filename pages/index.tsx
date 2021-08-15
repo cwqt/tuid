@@ -13,17 +13,17 @@
  *       [ ] drag to move all characters in selected region
  *  */
 
-import dynamic from "next/dynamic";
-import React, { useEffect } from "react";
-import Sidebar from "../components/sidebar/sidebar";
-import { useStore } from "../data/store";
+import dynamic from 'next/dynamic';
+import React, { useEffect } from 'react';
+import Sidebar from '../components/sidebar';
+import { useStore } from '../data/store';
 
-const TerminalNoSSR = dynamic(() => import("../components/terminal"), {
-  ssr: false,
+const TerminalNoSSR = dynamic(() => import('../components/matrix'), {
+  ssr: false
 });
 
 export default function Home() {
-  const setMatrix = useStore((state) => state.setMatrix);
+  const setMatrix = useStore(state => state.setMatrix);
   useEffect(() => setMatrix(98, 59));
 
   return (

@@ -1,11 +1,11 @@
-import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from "components/terminal";
-import create from "zustand";
+import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from 'components/matrix';
+import create from 'zustand';
 import {
   TerminalMatrix,
   IMatrixSquare,
   IEditorOptions,
-  createMatrixSquare,
-} from "./interfaces";
+  createMatrixSquare
+} from './interfaces';
 
 // matrix is a 2d array, filled with holes of undefined
 // [_,_,_,a,b,c],
@@ -14,6 +14,21 @@ import {
 // [_,_,_,h,i,j]
 // only rendering filled holes saves us a tonne
 // on memory & rendering speed
+
+export const applyStyle = (
+  editor: IEditorOptions,
+  square: IMatrixSquare
+): IMatrixSquare => ({
+  character: square.character,
+  foreground: editor.foreground,
+  background: editor.background,
+  underline: editor.underline,
+  strikeout: editor.strikeout,
+  bold: editor.bold,
+  italic: editor.italic
+});
+
+export type InputMode = 'input' | 'select';
 
 export const useStore = create<{
   matrix: TerminalMatrix;
@@ -32,10 +47,17 @@ export const useStore = create<{
 
   terminalBackgroundColor: string;
   setTerminalBackgroundColor: (hex: string) => void;
-}>((set) => ({
+
+  mode: InputMode;
+  setMode: (mode: InputMode) => void;
+
+  // selection area: x,y,width,height
+  selection: { x: number; y: number; w: number; h: number };
+  setSelection: (area: { x: number; y: number; w: number; h: number }) => void;
+}>(set => ({
   matrix: [],
   setMatrix: (width, height) =>
-    set((state) => {
+    set(state => {
       let matrix: IMatrixSquare[][] =
         // on initial load, matrix length will be 0x0, so create a fresh matrix
         state.matrix.length == 0
@@ -81,30 +103,17 @@ export const useStore = create<{
       }
 
       return {
-        ...state,
-        matrix,
+        matrix
       };
     }),
   setMatrixSquareProperty: (x, y, data) =>
-    set((state) => {
+    set(state => {
       state.matrix[y][x] = state.matrix[y][x]
         ? {
-            ...state.matrix[y][x],
-            underline: state.editor.underline,
-            bold: state.editor.bold,
-            strikeout: state.editor.strikeout,
-            italic: state.editor.italic,
-            foreground:
-              state.editor.depth == "foreground"
-                ? state.editor.color
-                : state.matrix[y][x].foreground,
-            background:
-              state.editor.depth == "background"
-                ? state.editor.color
-                : state.matrix[y][x].background,
-            ...data,
+            ...applyStyle(state.editor, state.matrix[y][x]),
+            ...data // explicit over-write
           }
-        : createMatrixSquare(data);
+        : applyStyle(state.editor, createMatrixSquare(data));
       return state;
     }),
 
@@ -113,23 +122,32 @@ export const useStore = create<{
     italic: false,
     underline: false,
     strikeout: false,
-    color: "#fff",
-    depth: "foreground",
+    foreground: '#fff',
+    background: DEFAULT_TERMINAL_BACKGROUND_COLOR
   },
-  setEditorProperties: (editor) =>
-    set((state) => ({
-      ...state,
+  setEditorProperties: editor =>
+    set(state => ({
       editor: {
         ...state.editor,
-        ...editor,
-      },
+        ...editor
+      }
     })),
 
-  selectedSpecialCharacter: "",
-  setSelectedSpecialCharacter: (value) =>
-    set((state) => ({ ...state, selectedSpecialCharacter: value })),
+  selectedSpecialCharacter: '',
+  setSelectedSpecialCharacter: value =>
+    set(state => ({
+      selectedSpecialCharacter:
+        // un-select if selecting currently selected
+        value == state.selectedSpecialCharacter ? undefined : value
+    })),
 
   terminalBackgroundColor: DEFAULT_TERMINAL_BACKGROUND_COLOR,
-  setTerminalBackgroundColor: (hex) =>
-    set((state) => ({ ...state, terminalBackgroundColor: hex })),
+  setTerminalBackgroundColor: hex =>
+    set(state => ({ terminalBackgroundColor: hex })),
+
+  mode: 'input',
+  setMode: mode => set(state => ({ mode: mode })),
+
+  selection: { x: undefined, y: undefined, w: undefined, h: undefined },
+  setSelection: area => set(state => ({ selection: area }))
 }));

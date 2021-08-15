@@ -9,27 +9,30 @@ import {
   Input,
   InputGroup,
   InputRightAddon,
-  InputLeftAddon,
-} from "@chakra-ui/react";
-import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from "components/terminal";
-import { useStore } from "data/store";
-import React from "react";
-import { useEffect } from "react";
-import { useState } from "react";
+  InputLeftAddon
+} from '@chakra-ui/react';
+import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from 'components/matrix';
+import { useStore } from 'data/store';
+import React from 'react';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { RepeatIcon } from '@chakra-ui/icons';
+import { IconButton } from '@chakra-ui/react';
 
 export default function TerminalSidebar(props: { className?: string }) {
   const {
     matrix,
     setMatrix,
     terminalBackgroundColor,
-    setTerminalBackgroundColor,
+    setTerminalBackgroundColor
   } = useStore();
 
+  // max terminal dimensions
   const [MAX_WIDTH, MAX_HEIGHT] = [202, 64];
 
   // store local copy of hex code to display error state of input
   const [hexCode, setHexCode] = useState<string>(
-    terminalBackgroundColor.slice(1, terminalBackgroundColor.length)
+    terminalBackgroundColor.slice(1)
   );
   const hexCodeRegex = /^([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/i;
 
@@ -83,24 +86,35 @@ export default function TerminalSidebar(props: { className?: string }) {
       </div>
       <p className="mt-2 text-sm">
         Max Width: {MAX_WIDTH}, Max Height: {MAX_HEIGHT}
+        <br />
         <span className="opacity-50">
           <b>n.b.</b> altering this value will destroy values beyond borders of
           previous dimensions
         </span>
       </p>
 
-      <FormControl id="terminal-height" className="mt-4">
-        <FormLabel>Terminal background color</FormLabel>
-        <InputGroup>
-          <InputLeftAddon>#</InputLeftAddon>
-          <Input
-            placeholder="Hex code"
-            defaultValue={hexCode}
-            isInvalid={!hexCodeRegex.test(hexCode)}
-            onChange={(e) => setHexCode(e.target.value)}
-          />
-        </InputGroup>
-      </FormControl>
+      <div className="flex">
+        <FormControl id="terminal-height" className="mt-4">
+          <FormLabel>Terminal background color</FormLabel>
+          <InputGroup>
+            <InputLeftAddon>#</InputLeftAddon>
+            <Input
+              defaultValue={hexCode}
+              placeholder="Hex code"
+              isInvalid={!hexCodeRegex.test(hexCode)}
+              onChange={e => setHexCode(e.target.value)}
+            />
+          </InputGroup>
+        </FormControl>
+
+        {/* Reset to default */}
+        <IconButton
+          onClick={() => setHexCode(DEFAULT_TERMINAL_BACKGROUND_COLOR.slice(1))}
+          aria-label="Reset to default"
+          className="mt-auto ml-2"
+          icon={<RepeatIcon />}
+        />
+      </div>
     </div>
   );
 }

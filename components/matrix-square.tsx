@@ -1,7 +1,7 @@
-import { forwardRef } from "@chakra-ui/react";
-import { css, cx } from "@emotion/css";
-import { IMatrixSquare } from "data/interfaces";
-import { memo } from "react";
+import { forwardRef } from '@chakra-ui/react';
+import { css, cx } from '@emotion/css';
+import { IMatrixSquare } from 'data/interfaces';
+import { memo } from 'react';
 
 type UiMatrixSquare = IMatrixSquare & {
   is_bordered: boolean;
@@ -15,20 +15,20 @@ export const MatrixSquare = memo(
         ref={ref}
         className={cx(
           props.className,
-          "font-mono leading-4 text-sm",
+          'font-mono leading-4 text-sm',
           css({
             border: `${props.is_bordered ? 1 : 0}px solid white`,
-            width: "1ch",
-            height: "1em",
+            width: '1ch',
+            height: '1em',
             color: props.foreground,
             backgroundColor: props.background,
-            fontWeight: props.bold ? "bold" : "normal",
-            fontStyle: props.italic ? "italic" : "normal",
+            fontWeight: props.bold ? 'bold' : 'normal',
+            fontStyle: props.italic ? 'italic' : 'normal',
             textDecoration: props.strikeout
-              ? "line-through"
+              ? 'line-through'
               : props.underline
-              ? "underline"
-              : "normal",
+              ? 'underline'
+              : 'normal'
           })
         )}
       >

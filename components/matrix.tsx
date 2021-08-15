@@ -1,14 +1,14 @@
-import { css, cx } from "@emotion/css";
-import useMouse from "@react-hook/mouse-position";
-import classnames from "classnames";
-import { clamp, useKeyPress } from "data/helpers";
-import { createMatrixSquare } from "data/interfaces";
-import React, { useEffect, useRef, useState } from "react";
-import useDimensions from "react-use-dimensions";
-import { useStore } from "../data/store";
-import { MatrixSquare } from "./matrix-square";
+import { css, cx } from '@emotion/css';
+import useMouse from '@react-hook/mouse-position';
+import classnames from 'classnames';
+import { clamp, useKeyPress } from 'data/helpers';
+import { createMatrixSquare } from 'data/interfaces';
+import React, { useEffect, useRef, useState } from 'react';
+import useDimensions from 'react-use-dimensions';
+import { applyStyle, useStore } from '../data/store';
+import { MatrixSquare } from './matrix-square';
 
-export const DEFAULT_TERMINAL_BACKGROUND_COLOR = "#1f2937";
+export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#1f2937' as const;
 
 export default function Terminal(props: { className?: string }) {
   const {
@@ -16,11 +16,28 @@ export default function Terminal(props: { className?: string }) {
     setMatrixSquareProperty,
     selectedSpecialCharacter,
     terminalBackgroundColor,
+    editor,
+    mode,
+    selection,
+    setSelection
   } = useStore();
   const [cursor, setCursor] = useState<{
     x: number;
     y: number;
   }>({ x: undefined, y: undefined });
+
+  const [cursorStyle, setCursorStyle] = useState(
+    applyStyle(editor, createMatrixSquare())
+  );
+
+  useEffect(() => {
+    setCursorStyle(
+      applyStyle(
+        editor,
+        createMatrixSquare({ character: selectedSpecialCharacter || ' ' })
+      )
+    );
+  }, [editor, selectedSpecialCharacter]);
 
   // 30x100 grid is 3,000 nodes - having event listeners on every one to check if
   // hovered is slow as dog, instead use mouse position and some maths to figure out
@@ -29,19 +46,19 @@ export default function Terminal(props: { className?: string }) {
   const mouse = useMouse(mouseRef, {
     leaveDelay: 0,
     enterDelay: 0,
-    fps: 60,
+    fps: 60
   });
 
   // We need to know the width & height of one of these MatrixSquares
   // since they use ch/rems for dimensions, which we'll need in px to
   // find x,y position of square in the grid
-  const hiddenSquareProps = createMatrixSquare({ character: "X" });
+  const hiddenSquareProps = createMatrixSquare({ character: 'X' });
   const [hiddenSquareRef, { width, height }] = useDimensions();
   useEffect(() => {
     if (width && height && mouse?.x && mouse?.y && matrix) {
       const [x, y] = [
         clamp(0, Math.trunc(mouse.x / width), matrix[0].length - 1),
-        clamp(0, Math.trunc(mouse.y / height), matrix.length - 1),
+        clamp(0, Math.trunc(mouse.y / height), matrix.length - 1)
       ];
 
       setCursor({ x: x, y: y });
@@ -128,37 +145,38 @@ export default function Terminal(props: { className?: string }) {
   // same key trigger useEffect as value is pointing to a different location
   const keyPressed = useKeyPress();
   useEffect(() => {
+    if (mode !== 'input') return;
     const { key } = keyPressed;
     const { x, y } = cursor;
 
     // Only handle keypresses if the mouse is currently over this grid square
     if (x != undefined && y != undefined) {
       switch (key) {
-        case "Backspace":
+        case 'Backspace':
           const { x: nx, y: ny } = retreatColumn({ x, y }, matrix);
           setCursor({ x: nx, y: ny });
-          setMatrixSquareProperty(nx, ny, { character: " " });
+          setMatrixSquareProperty(nx, ny, { character: ' ' });
           break;
-        case "ArrowDown":
+        case 'ArrowDown':
           setCursor(advanceRow({ x, y }, matrix));
           break;
-        case "ArrowUp":
+        case 'ArrowUp':
           setCursor(retreatRow({ x, y }, matrix));
           break;
-        case "ArrowLeft":
+        case 'ArrowLeft':
           setCursor(retreatColumn({ x, y }, matrix));
           break;
-        case "ArrowRight":
+        case 'ArrowRight':
           setCursor(advanceColumn({ x, y }, matrix));
           break;
-        case "Shift":
-        case "Meta":
-        case "Alt":
-        case "Control":
-        case "Enter":
-        case "Tab":
-        case "CapsLock":
-        case "Escape":
+        case 'Shift':
+        case 'Meta':
+        case 'Alt':
+        case 'Control':
+        case 'Enter':
+        case 'Tab':
+        case 'CapsLock':
+        case 'Escape':
           // ignore these
           break;
         default:
@@ -168,23 +186,76 @@ export default function Terminal(props: { className?: string }) {
     }
   }, [keyPressed]);
 
+  // holds the current in-progress selection
+  const [progressingSelection, setProgressingSelection] = useState({
+    x: undefined,
+    y: undefined,
+    w: undefined,
+    h: undefined
+  });
+
   // We'll use mouse-presses over the terminal to insert a special character into the terminal
-  const insertSpecialCharacter = () => {
-    const { x, y } = cursor;
-    if (x != undefined && y != undefined) {
-      if (selectedSpecialCharacter) {
-        setMatrixSquareProperty(x, y, { character: selectedSpecialCharacter });
-      } else {
-        setMatrixSquareProperty(x, y, {
-          character: matrix[y][x]?.character || " ",
-        });
+  const handleMouseDown = () => {
+    // in select mode, clicking means being a selection
+    if (mode == 'select') {
+      setProgressingSelection({ x: cursor.x, y: cursor.y, w: 1, h: 1 });
+    }
+
+    // in input mode, clicking means inserting a special selected character
+    if (mode == 'input') {
+      const { x, y } = cursor;
+      if (x != undefined && y != undefined) {
+        if (selectedSpecialCharacter) {
+          setMatrixSquareProperty(x, y, {
+            character: selectedSpecialCharacter
+          });
+        } else {
+          setMatrixSquareProperty(x, y, {
+            character: matrix[y][x]?.character || ' '
+          });
+        }
       }
     }
   };
 
+  // in select mode, listen for mouse movements to expand the current in-progress selection area
+  useEffect(() => {
+    // check in select mode & there is a current in progress selection
+    if (
+      mode == 'select' &&
+      Object.values(progressingSelection).every(v => v != undefined)
+    ) {
+      let x, y, w, h;
+      const [c, s] = [cursor, progressingSelection];
+
+      setProgressingSelection({
+        x: s.x,
+        y: s.x,
+        w: c.x - s.x,
+        h: c.y - s.y
+      });
+    }
+  }, [cursor]);
+
+  const handleMouseUp = () => {
+    // in select mode, mouse up means stopping the in-progress selection
+  };
+
+  // For select mode, listen for mouse movements & move selection
+  useEffect(() => {
+    if (mode == 'select') {
+      setSelection({ x: cursor.x, y: cursor.y, w: 10, h: 10 });
+    }
+  }, [cursor]);
+
   return (
     <div>
-      <div className={classnames(props.className, "flex flex-col m-4 ml-0")}>
+      <div
+        className={classnames(
+          props.className,
+          'flex flex-col m-4 ml-0 relative'
+        )}
+      >
         {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
         <MatrixSquare
           className="opacity-0 absolute"
@@ -196,39 +267,65 @@ export default function Terminal(props: { className?: string }) {
         <div
           id="terminal"
           className={cx(
-            "p-4 rounded-md shadow",
+            'p-4 rounded-md shadow',
             css({ backgroundColor: terminalBackgroundColor })
           )}
-          onClick={insertSpecialCharacter}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
         >
-          {/* has no padding, so no need to do any offset calculations to find grid square */}
-          {/* all matrix squares are positioned relative to this container, offsetted by their x & y value */}
+          {/* has no padding, so no need to do any offset calculations to find grid square
+              all matrix squares are positioned relative to this container, offsetted by
+              their x * width & y * height */}
           <div
             ref={mouseRef}
             className={cx(
-              "relative border border-gray-600",
+              'relative border border-gray-600',
               css({
                 width: `${matrix[0].length * width}px`,
-                height: `${matrix.length * height}px`,
+                height: `${matrix.length * height}px`
               })
             )}
           >
-            {/* show a cursor MatrixSquare with all the styles currently  */}
-            {/* don't show cursor character outside the border of the dimensions */}
-            {0 <= cursor.x &&
+            {/* for selection mode, show currently selected area */}
+            {mode == 'select' &&
+              Object.values(progressingSelection).every(
+                v => v != undefined
+              ) && (
+                <div
+                  className={cx(
+                    'absolute border border-gray-100 z-10',
+                    css({
+                      left: `${progressingSelection.x * width}px`,
+                      top: `${progressingSelection.y * height}px`,
+                      width: `${progressingSelection.w * width}px`,
+                      height: `${progressingSelection.h * height}px`
+                    })
+                  )}
+                ></div>
+              )}
+
+            {/* for input mode, show a cursor MatrixSquare with all the styles currently 
+                don't show cursor character outside the border of the dimensions */}
+            {mode == 'input' &&
+              0 <= cursor.x &&
               cursor.x < matrix[0].length &&
               0 <= cursor.y &&
               cursor.y < matrix.length && (
                 <MatrixSquare
                   className={cx(
-                    "absolute",
+                    'absolute z-10',
                     css({
                       left: `${cursor.x * width}px`,
                       top: `${cursor.y * height}px`,
+                      backgroundColor: editor.background
                     })
                   )}
-                  {...hiddenSquareProps}
-                  character={matrix[cursor.y][cursor.x]?.character || " "}
+                  {...cursorStyle}
+                  character={
+                    selectedSpecialCharacter ||
+                    matrix[cursor.y][cursor.x]?.character ||
+                    cursorStyle.character
+                  }
                   is_bordered={true}
                 ></MatrixSquare>
               )}
@@ -241,10 +338,10 @@ export default function Terminal(props: { className?: string }) {
                       matrix[y][x] != undefined && (
                         <MatrixSquare
                           className={cx(
-                            "absolute",
+                            'absolute',
                             css({
                               left: `${x * width}px`,
-                              top: `${y * height}px`,
+                              top: `${y * height}px`
                             })
                           )}
                           key={`${x}-${y}`}
