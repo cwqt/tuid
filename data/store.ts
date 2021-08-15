@@ -1,34 +1,10 @@
 import create from "zustand";
-
-export interface IMatrixSquare {
-  character: string; // any utf-8 character
-  foreground: string; // hex color
-  background: string; // hex color
-  underlined: boolean;
-  bold: boolean;
-  italic: boolean;
-}
-
-export const createMatrixSquare = (
-  square: Partial<IMatrixSquare> = {}
-): IMatrixSquare => ({
-  character: square.character ?? " ",
-  foreground: square.foreground || "#fff",
-  background: square.background || "transparent",
-  underlined: square.underlined ?? false,
-  bold: square.bold ?? false,
-  italic: square.italic ?? false,
-});
-
-// matrix[x][y]
-// x ---->     y
-// [[],[],[]]  |
-// [[],[],[]]  |
-// [[],[],[]]  v
-// [[],[],[]]
-// matrix[y][x]
-type TerminalMatrix = IMatrixSquare[][];
-type Depth = "foreground" | "background";
+import {
+  TerminalMatrix,
+  IMatrixSquare,
+  IEditorOptions,
+  createMatrixSquare,
+} from "./interfaces";
 
 export const useStore = create<{
   matrix: TerminalMatrix;
@@ -38,10 +14,12 @@ export const useStore = create<{
     y: number,
     data: Partial<IMatrixSquare>
   ) => void;
-  selectedColor: string;
-  setSelectedColor: (color: string) => void;
-  selectedDepth: Depth;
-  setSelectedDepth: (depth: Depth) => void;
+
+  editor: IEditorOptions;
+  setEditorProperties: (editor: Partial<IEditorOptions>) => void;
+
+  selectedSpecialCharacter: string;
+  setSelectedSpecialCharacter: (value: string) => void;
 }>((set) => ({
   matrix: [],
   setMatrix: (width, height) =>
@@ -53,15 +31,43 @@ export const useStore = create<{
     })),
   setMatrixSquareProperty: (x, y, data) =>
     set((state) => {
-      state.matrix[y][x] = { ...state.matrix[y][x], ...data };
+      state.matrix[y][x] = {
+        ...state.matrix[y][x],
+        underline: state.editor.underline,
+        bold: state.editor.bold,
+        strikeout: state.editor.strikeout,
+        italic: state.editor.italic,
+        foreground:
+          state.editor.depth == "foreground"
+            ? state.editor.color
+            : state.matrix[y][x].foreground,
+        background:
+          state.editor.depth == "background"
+            ? state.editor.color
+            : state.matrix[y][x].background,
+        ...data,
+      };
       return state;
     }),
 
-  selectedColor: "#000",
-  setSelectedColor: (color) =>
-    set((state) => ({ ...state, selectedColor: color })),
+  editor: {
+    bold: false,
+    italic: false,
+    underline: false,
+    strikeout: false,
+    color: "#fff",
+    depth: "foreground",
+  },
+  setEditorProperties: (editor) =>
+    set((state) => ({
+      ...state,
+      editor: {
+        ...state.editor,
+        ...editor,
+      },
+    })),
 
-  selectedDepth: "foreground",
-  setSelectedDepth: (depth) =>
-    set((state) => ({ ...state, selectedDepth: depth })),
+  selectedSpecialCharacter: "",
+  setSelectedSpecialCharacter: (value) =>
+    set((state) => ({ ...state, selectedSpecialCharacter: value })),
 }));

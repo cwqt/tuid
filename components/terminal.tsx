@@ -1,90 +1,15 @@
-import { createMatrixSquare, IMatrixSquare, useStore } from "../data/store";
-import {
-  memo,
-  MutableRefObject,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import classnames from "classnames";
-import { cx, css } from "@emotion/css";
 import useMouse from "@react-hook/mouse-position";
-import useThrottle from "@react-hook/throttle";
-
-import { forwardRef } from "@chakra-ui/react";
-
+import classnames from "classnames";
+import { clamp, useKeyPress } from "data/helpers";
+import { createMatrixSquare } from "data/interfaces";
+import React, { useEffect, useRef, useState } from "react";
 import useDimensions from "react-use-dimensions";
-
-// const Borders = ["─", " ", "│", "│", "╭", "╮", "┘", "└"];
-
-const Borders = {
-  Square: [
-    ["╭", "─", "╮"],
-    ["│", " ", "│"],
-    ["└", "─", "┘"],
-  ],
-};
-
-// 8 x 14 grid,
-
-function clamp(min, num, max) {
-  return num <= min ? min : num >= max ? max : num;
-}
-
-function useKeyPress(): { key: string } {
-  // State for keeping track of pressed key
-  const [keyPressed, setKeyPressed] = useState<{ key: string }>({
-    key: undefined,
-  });
-
-  // If pressed key is our target key then set to true
-  function downHandler({ key }): void {
-    setKeyPressed({ key });
-  }
-
-  // Add event listeners
-  useEffect(() => {
-    window.addEventListener("keydown", downHandler);
-    // Remove event listeners on cleanup
-    return () => {
-      window.removeEventListener("keydown", downHandler);
-    };
-  }, []); // Empty array ensures that effect is only run on mount and unmount
-
-  return keyPressed;
-}
-
-type UiMatrixSquare = IMatrixSquare & { is_bordered: boolean };
-
-const MatrixSquare = memo(
-  forwardRef((props: UiMatrixSquare, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cx(
-          "font-mono",
-          css({
-            border: `${props.is_bordered ? 1 : 0}px solid white`,
-            width: "1ch",
-            height: "1em",
-            color: props.foreground,
-            // backgroundColor: props.background,
-            "hover:": {
-              backgroundColor: "red",
-            },
-          })
-        )}
-      >
-        {props.character}
-      </div>
-    );
-  })
-);
+import { useStore } from "../data/store";
+import { MatrixSquare } from "./matrix-square";
 
 export default function Terminal(props: { className?: string }) {
-  const { matrix, setMatrixSquareProperty } = useStore();
+  const { matrix, setMatrixSquareProperty, selectedSpecialCharacter } =
+    useStore();
   const [cursor, setCursor] = useState<{
     x: number;
     y: number;
@@ -105,11 +30,8 @@ export default function Terminal(props: { className?: string }) {
   // find x,y position of square in the grid
   const hiddenSquareProps = createMatrixSquare({ character: "X" });
   const [hiddenSquareRef, { width, height }] = useDimensions();
-
   useEffect(() => {
     if (width && height && mouse?.x && mouse?.y && matrix) {
-      console.log(mouse.y / height);
-
       const [x, y] = [
         clamp(0, Math.trunc(mouse.x / width), matrix[0].length - 1),
         clamp(0, Math.trunc(mouse.y / height), matrix.length - 1),
@@ -122,6 +44,8 @@ export default function Terminal(props: { className?: string }) {
     }
   }, [mouse]);
 
+  // Handle moving the current cursor position from arrow keypresses
+  // account for wrapping / boundaries of terminal
   const retreatColumn = (
     current: { x: number; y: number },
     matrix: any[][]
@@ -237,19 +161,36 @@ export default function Terminal(props: { className?: string }) {
     }
   }, [keyPressed]);
 
+  // We'll use mouse-presses over the terminal to insert a special character into the terminal
+  const insertSpecialCharacter = () => {
+    const { x, y } = cursor;
+    if (x != undefined && y != undefined) {
+      if (selectedSpecialCharacter) {
+        setMatrixSquareProperty(x, y, { character: selectedSpecialCharacter });
+      } else {
+        setMatrixSquareProperty(x, y, { character: matrix[y][x].character });
+      }
+    }
+  };
+
   return (
     <div>
       <div className={classnames(props.className, "flex flex-col")}>
         {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
         <MatrixSquare
+          className="opacity-0"
           onClick={() => {}}
           ref={hiddenSquareRef}
           {...hiddenSquareProps}
         ></MatrixSquare>
 
-        <div id="terminal" className="bg-gray-800 p-4 rounded-md shadow">
+        <div
+          id="terminal"
+          className="bg-gray-800 p-4 rounded-md shadow"
+          onClick={insertSpecialCharacter}
+        >
           {/* has no padding, so no need to do any offset calculations to find grid square */}
-          <div ref={mouseRef} className="border border-white">
+          <div ref={mouseRef}>
             {matrix.map((row, y) => {
               return (
                 <div key={`column-${y}`} className="flex">

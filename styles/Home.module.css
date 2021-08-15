@@ -5,3 +5,7 @@
 #terminal {
   background-color: red;
 }
+
+#terminal * {
+  line-height: 1;
+}

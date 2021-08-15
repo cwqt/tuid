@@ -24,11 +24,11 @@ const TerminalNoSSR = dynamic(() => import("../components/terminal"), {
 
 export default function Home() {
   const setMatrix = useStore((state) => state.setMatrix);
-  useEffect(() => setMatrix(100, 30));
+  useEffect(() => setMatrix(50, 30));
 
   return (
-    <div className="flex h-screen">
-      <Sidebar className="h-full p-4 m-4 shadow"></Sidebar>
+    <div className="flex h-screen w-screen bg-gray-300">
+      <Sidebar className="p-4 m-4 shadow rounded"></Sidebar>
       <TerminalNoSSR className="h-full"></TerminalNoSSR>
     </div>
   );

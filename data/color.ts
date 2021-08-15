@@ -9,6 +9,7 @@ const toLuv = (arr: [number, number, number]): Luv => ({
   u: arr[1],
   v: arr[2],
 });
+
 // https://github.com/lucasb-eyer/go-ul/blob/4d8f45c41ac988423342507a1fb6050239b5a742/.go#L882
 function blendLuv(luv1: Luv, luv2: Luv, t: number): Luv {
   const { l: l1, u: u1, v: v1 } = luv1;
