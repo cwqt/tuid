@@ -18,8 +18,8 @@ export default function Terminal(props: { className?: string }) {
     terminalBackgroundColor,
     editor,
     mode,
-    selection,
-    setSelection
+    selection: storeSelection,
+    setSelection: setStoreSelection
   } = useStore();
   const [cursor, setCursor] = useState<{
     x: number;
@@ -187,7 +187,11 @@ export default function Terminal(props: { className?: string }) {
   }, [keyPressed]);
 
   // holds the current in-progress selection
-  const [progressingSelection, setProgressingSelection] = useState({
+  const [selectionStart, setSelectionStart] = useState({
+    x: undefined,
+    y: undefined
+  });
+  const [selection, setSelection] = useState({
     x: undefined,
     y: undefined,
     w: undefined,
@@ -198,7 +202,8 @@ export default function Terminal(props: { className?: string }) {
   const handleMouseDown = () => {
     // in select mode, clicking means being a selection
     if (mode == 'select') {
-      setProgressingSelection({ x: cursor.x, y: cursor.y, w: 1, h: 1 });
+      setSelectionStart({ x: cursor.x, y: cursor.y });
+      setSelection({ x: cursor.x, y: cursor.y, w: 1, h: 1 });
     }
 
     // in input mode, clicking means inserting a special selected character
@@ -223,16 +228,29 @@ export default function Terminal(props: { className?: string }) {
     // check in select mode & there is a current in progress selection
     if (
       mode == 'select' &&
-      Object.values(progressingSelection).every(v => v != undefined)
+      Object.values(selection).every(v => v != undefined)
     ) {
-      let x, y, w, h;
-      const [c, s] = [cursor, progressingSelection];
+      // c: current point, s: initial point
+      const [c, s] = [{ ...cursor }, { ...selectionStart }];
 
-      setProgressingSelection({
-        x: s.x,
-        y: s.x,
-        w: c.x - s.x,
-        h: c.y - s.y
+      let [w, h] = [Math.abs(c.x - s.x), Math.abs(c.y - s.y)];
+      let [x, y] = [s.x, s.y];
+
+      if (c.y < s.y) {
+        y = c.y;
+        h = Math.abs(c.y - s.y);
+      }
+
+      if (c.x < s.x) {
+        x = c.x;
+        w = Math.abs(c.x - s.x);
+      }
+
+      setSelection({
+        x,
+        y,
+        w,
+        h
       });
     }
   }, [cursor]);
@@ -243,9 +261,9 @@ export default function Terminal(props: { className?: string }) {
 
   // For select mode, listen for mouse movements & move selection
   useEffect(() => {
-    if (mode == 'select') {
-      setSelection({ x: cursor.x, y: cursor.y, w: 10, h: 10 });
-    }
+    // if (mode == 'select') {
+    //   setSelection({ x: cursor.x, y: cursor.y, w: 10, h: 10 });
+    // }
   }, [cursor]);
 
   return (
@@ -288,17 +306,15 @@ export default function Terminal(props: { className?: string }) {
           >
             {/* for selection mode, show currently selected area */}
             {mode == 'select' &&
-              Object.values(progressingSelection).every(
-                v => v != undefined
-              ) && (
+              Object.values(selection).every(v => v != undefined) && (
                 <div
                   className={cx(
                     'absolute border border-gray-100 z-10',
                     css({
-                      left: `${progressingSelection.x * width}px`,
-                      top: `${progressingSelection.y * height}px`,
-                      width: `${progressingSelection.w * width}px`,
-                      height: `${progressingSelection.h * height}px`
+                      left: `${selection.x * width}px`,
+                      top: `${selection.y * height}px`,
+                      width: `${selection.w * width}px`,
+                      height: `${selection.h * height}px`
                     })
                   )}
                 ></div>
