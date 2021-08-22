@@ -9,11 +9,11 @@ import {
   Tabs
 } from '@chakra-ui/react';
 import { cx } from '@emotion/css';
-import { useStore } from 'data/store';
+import { useStore } from 'common/store';
 import React from 'react';
 import InputSidebar from './input';
 import SelectSidebar from './select';
-import TerminalSidebar from './terminal';
+import SettingsSidebar from './settings';
 
 export default function Sidebar(props: { className?: string }) {
   const { setMode } = useStore();
@@ -32,7 +32,7 @@ export default function Sidebar(props: { className?: string }) {
           <Tab onClick={() => setMode('select')} id="tab-select">
             Select
           </Tab>
-          <Tab id="tab-terminal">Terminal</Tab>
+          <Tab id="tab-settings">Settings</Tab>
         </TabList>
 
         <TabPanels>
@@ -43,7 +43,7 @@ export default function Sidebar(props: { className?: string }) {
             <SelectSidebar></SelectSidebar>
           </TabPanel>
           <TabPanel padding="0" paddingTop="3">
-            <TerminalSidebar></TerminalSidebar>
+            <SettingsSidebar></SettingsSidebar>
           </TabPanel>
         </TabPanels>
       </Tabs>

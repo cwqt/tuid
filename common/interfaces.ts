@@ -36,3 +36,29 @@ export interface IEditorOptions {
   foreground: string;
   background: string;
 }
+
+export type ICompressedMatrix = {
+  [index in `${string},${string}`]: ICompressedMatrixSquare;
+};
+
+export type ICompressedMatrixSquare = [
+  IMatrixSquare['character'],
+  number, // bold
+  number, // italic
+  number, // underline
+  number, // strikeout
+  number, // mapped foreground
+  number // mapped background
+];
+
+export interface ExportedState {
+  file_title: string;
+  matrix: {
+    dimensions: { width: number; height: number };
+    colors: string[];
+    data: ICompressedMatrix;
+  };
+  settings: {
+    terminal_background_color: string;
+  };
+}

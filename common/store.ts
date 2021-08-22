@@ -1,10 +1,13 @@
 import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from 'components/matrix';
+import FileSaver from 'file-saver';
 import create from 'zustand';
+import compression from './compression';
 import {
-  TerminalMatrix,
-  IMatrixSquare,
+  createMatrixSquare,
+  ExportedState,
   IEditorOptions,
-  createMatrixSquare
+  IMatrixSquare,
+  TerminalMatrix
 } from './interfaces';
 
 // matrix is a 2d array, filled with holes of undefined
@@ -30,7 +33,10 @@ export const applyStyle = (
 
 export type InputMode = 'input' | 'select';
 
-export const useStore = create<{
+export interface IStore {
+  fileTitle: string;
+  setFileTitle: (title: string) => void;
+
   matrix: TerminalMatrix;
   setMatrix: (width: number, height: number) => void;
   setMatrixSquareProperty: (
@@ -54,7 +60,16 @@ export const useStore = create<{
   // selection area: x,y,width,height
   selection: { x: number; y: number; w: number; h: number };
   setSelection: (area: { x: number; y: number; w: number; h: number }) => void;
-}>(set => ({
+
+  // import & export
+  exportState: () => void;
+  importState: (json: string) => void;
+}
+
+export const useStore = create<IStore>(set => ({
+  fileTitle: '',
+  setFileTitle: title => set(state => ({ fileTitle: title })),
+
   matrix: [],
   setMatrix: (width, height) =>
     set(state => {
@@ -62,7 +77,7 @@ export const useStore = create<{
         // on initial load, matrix length will be 0x0, so create a fresh matrix
         state.matrix.length == 0
           ? Array.from({ length: height }, () =>
-              Array.from({ length: width }, () => undefined)
+              Array.from({ length: width }, undefined)
             )
           : state.matrix;
 
@@ -149,5 +164,44 @@ export const useStore = create<{
   setMode: mode => set(state => ({ mode: mode })),
 
   selection: { x: undefined, y: undefined, w: undefined, h: undefined },
-  setSelection: area => set(state => ({ selection: area }))
+  setSelection: area => set(state => ({ selection: area })),
+
+  exportState: () =>
+    set(state => {
+      const exportedState: ExportedState = {
+        file_title: state.fileTitle,
+        matrix: compression.matrix.compress(state.matrix),
+        settings: {
+          terminal_background_color: state.terminalBackgroundColor
+        }
+      };
+
+      FileSaver.saveAs(
+        new Blob([JSON.stringify(exportedState)], { type: 'application/json' }),
+        `${
+          exportedState.file_title
+            ? exportedState.file_title.replace(' ', '-')
+            : new Date().toISOString()
+        }.tui.json`
+      );
+
+      return state;
+    }),
+
+  importState: file =>
+    set(state => {
+      const exportedState: ExportedState = JSON.parse(file);
+      console.log(exportedState);
+      if (!exportedState.matrix) {
+        throw new Error(`Invalid exported state file`);
+      }
+
+      return {
+        fileTitle: exportedState.file_title || '',
+        matrix: compression.matrix.decompress(exportedState.matrix),
+        terminalBackgroundColor:
+          exportedState.settings.terminal_background_color ||
+          DEFAULT_TERMINAL_BACKGROUND_COLOR
+      };
+    })
 }));

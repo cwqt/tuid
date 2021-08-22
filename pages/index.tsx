@@ -14,22 +14,36 @@
  *  */
 
 import dynamic from 'next/dynamic';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Sidebar from '../components/sidebar';
-import { useStore } from '../data/store';
+import { useStore } from '../common/store';
 
 const TerminalNoSSR = dynamic(() => import('../components/matrix'), {
   ssr: false
 });
 
 export default function Home() {
-  const setMatrix = useStore(state => state.setMatrix);
-  useEffect(() => setMatrix(98, 59));
+  const { matrix, setMatrix, setMatrixSquareProperty } = useStore();
+
+  useEffect(() => {
+    setMatrix(98, 59);
+
+    'hello world'
+      .split('')
+      .forEach((c, idx) =>
+        setMatrixSquareProperty(idx + 5, 10, { character: c })
+      );
+  }, []);
 
   return (
     <div className="flex h-screen w-screen bg-gray-300">
-      <Sidebar className="p-4 m-4 shadow rounded w-1/4"></Sidebar>
-      <TerminalNoSSR className="h-full"></TerminalNoSSR>
+      {/* Hold off first render until matrix value has been set */}
+      {matrix.length && (
+        <>
+          <Sidebar className="p-4 m-4 shadow rounded w-1/4"></Sidebar>
+          <TerminalNoSSR className="h-full"></TerminalNoSSR>
+        </>
+      )}
     </div>
   );
 }

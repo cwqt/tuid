@@ -1,6 +1,6 @@
 import { forwardRef } from '@chakra-ui/react';
 import { css, cx } from '@emotion/css';
-import { IMatrixSquare } from 'data/interfaces';
+import { IMatrixSquare } from 'common/interfaces';
 import { memo } from 'react';
 
 type UiMatrixSquare = IMatrixSquare & {

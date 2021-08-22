@@ -1,12 +1,15 @@
 import { css, cx } from '@emotion/css';
 import useMouse from '@react-hook/mouse-position';
 import classnames from 'classnames';
-import { clamp, useKeyPress } from 'data/helpers';
-import { createMatrixSquare } from 'data/interfaces';
+import { clamp, useKeyPress } from 'common/helpers';
+import { createMatrixSquare } from 'common/interfaces';
 import React, { useEffect, useRef, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
-import { applyStyle, useStore } from '../data/store';
+import { applyStyle, useStore } from '../common/store';
 import { MatrixSquare } from './matrix-square';
+
+export const thisIsAnUnusedExport =
+  'this export only exists to disable fast refresh for this file';
 
 export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#1f2937' as const;
 
@@ -25,6 +28,8 @@ export default function Terminal(props: { className?: string }) {
     x: number;
     y: number;
   }>({ x: undefined, y: undefined });
+
+  //
 
   const [cursorStyle, setCursorStyle] = useState(
     applyStyle(editor, createMatrixSquare())
@@ -254,6 +259,13 @@ export default function Terminal(props: { className?: string }) {
       });
     }
   }, [cursor]);
+
+  // useEffect(() => {
+  //   if (mode !== 'select') {
+  //     setSelectionStart({ x: undefined, y: undefined });
+  //     setSelection({ x: undefined, y: undefined, w: undefined, h: undefined });
+  //   }
+  // }, [mode]);
 
   const handleMouseUp = () => {
     // in select mode, mouse up means stopping the in-progress selection

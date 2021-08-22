@@ -1,9 +1,7 @@
-import { useStore } from 'data/store';
+import { useStore } from 'common/store';
 import { useEffect } from 'react';
 
 export default function SelectSidebar(props: { className?: string }) {
-  const { editor, setEditorProperties } = useStore();
-
   return (
     <div>
       <p>
