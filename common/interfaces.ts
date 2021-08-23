@@ -62,3 +62,6 @@ export interface ExportedState {
     terminal_background_color: string;
   };
 }
+
+export type SelectionRegion = { x: number; y: number; w: number; h: number };
+export type Coordinates = { x: number; y: number };

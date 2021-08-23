@@ -7,6 +7,7 @@ import {
   ExportedState,
   IEditorOptions,
   IMatrixSquare,
+  SelectionRegion,
   TerminalMatrix
 } from './interfaces';
 
@@ -58,8 +59,8 @@ export interface IStore {
   setMode: (mode: InputMode) => void;
 
   // selection area: x,y,width,height
-  selection: { x: number; y: number; w: number; h: number };
-  setSelection: (area: { x: number; y: number; w: number; h: number }) => void;
+  selection: SelectionRegion | undefined;
+  setSelection: (region: SelectionRegion) => void;
 
   // import & export
   exportState: () => void;
@@ -163,7 +164,7 @@ export const useStore = create<IStore>(set => ({
   mode: 'input',
   setMode: mode => set(state => ({ mode: mode })),
 
-  selection: { x: undefined, y: undefined, w: undefined, h: undefined },
+  selection: undefined,
   setSelection: area => set(state => ({ selection: area })),
 
   exportState: () =>

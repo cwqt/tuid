@@ -26,7 +26,8 @@ export default function Home() {
   const { matrix, setMatrix, setMatrixSquareProperty } = useStore();
 
   useEffect(() => {
-    setMatrix(98, 59);
+    // setMatrix(98, 59);
+    setMatrix(30, 30);
 
     'hello world'
       .split('')
