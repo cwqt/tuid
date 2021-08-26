@@ -17,6 +17,20 @@ import { MatrixSquare } from './matrix-square';
 
 export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#1f2937' as const;
 
+const usePrevious = <T,>(value: T) => {
+  const ref = useRef<T>();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};
+
+const f =
+  <T1, T2>(arg1: T1) =>
+  (arg2: T2) => {
+    return { arg1, arg2 };
+  };
+
 export default function Terminal(props: { className?: string }) {
   const {
     matrix,
@@ -51,6 +65,9 @@ export default function Terminal(props: { className?: string }) {
     enterDelay: 0,
     fps: 60
   });
+  // store previous value to compare against to resolve bug with cursor
+  // moving back and forth, read below
+  const prevMouse = usePrevious(mouse);
 
   // We need to know the width & height of one of these MatrixSquares
   // since they use ch/rems for dimensions, which we'll need in px to
@@ -59,6 +76,11 @@ export default function Terminal(props: { className?: string }) {
   const [hiddenSquareRef, { width, height }] = useDimensions();
   useEffect(() => {
     if (width && height && mouse?.x && mouse?.y && matrix) {
+      // weird bug where typing will cause cursor to switch back and forth
+      // even though the mouse position hasn't actually move - i suspect this
+      // has something to do with the actual mouse cursor itself changing
+      if (mouse.x == prevMouse?.x && mouse.y == prevMouse?.y) return;
+
       const [x, y] = [
         clamp(0, Math.trunc(mouse.x / width), matrix[0].length - 1),
         clamp(0, Math.trunc(mouse.y / height), matrix.length - 1)
@@ -66,8 +88,8 @@ export default function Terminal(props: { className?: string }) {
 
       setCursor({ x: x, y: y });
     } else {
-      // set undefined once mouse leaves terminal bounding box
-      setCursor({ x: undefined, y: undefined });
+      // set to last known position when leaving terminal bounding box
+      setCursor({ x: cursor?.x, y: cursor?.y });
     }
   }, [mouse]);
 
@@ -158,13 +180,13 @@ export default function Terminal(props: { className?: string }) {
         case 'Delete': {
           const { x: nx, y: ny } = advanceColumn({ x, y }, matrix);
           setCursor({ x: nx, y: ny });
-          setMatrixSquareProperty(nx, ny, { character: ' ' });
+          setMatrixSquareProperty(nx, ny, null);
           break;
         }
         case 'Backspace': {
           const { x: nx, y: ny } = retreatColumn({ x, y }, matrix);
           setCursor({ x: nx, y: ny });
-          setMatrixSquareProperty(nx, ny, { character: ' ' });
+          setMatrixSquareProperty(nx, ny, null);
           break;
         }
         case 'ArrowDown':
@@ -233,8 +255,8 @@ export default function Terminal(props: { className?: string }) {
       } else {
         // there's current selection area
         const [c, s] = [cursor, storeSelection];
-        // check if this is the start of the drag operation by checking
-        // within the bounds
+        // check if this is the start of the drag operation by checking click within
+        // bounding box of selected region
         if (
           !dragLocation &&
           // AABB
@@ -244,8 +266,10 @@ export default function Terminal(props: { className?: string }) {
           c.y <= s.y + s.h
         ) {
           // starting a drag, take a slice of the area we're going to be shifting around
-          const slice = matrix.slice(s.y, s.y + s.h);
-          slice.forEach(row => row.slice(s.x, s.x + s.w));
+          // so it can be visualised on top of the existing matrix squares
+          const slice = matrix
+            .slice(s.y, s.y + s.h)
+            .map(row => row.slice(s.x, s.x + s.w));
 
           setDragSlice(slice);
           setDragLocation({
@@ -336,27 +360,23 @@ export default function Terminal(props: { className?: string }) {
     return (
       <>
         {matrix.map((row, y) => {
-          return (
-            <div key={`column-${y}`} className="flex">
-              {row.map((column, x) => {
-                return (
-                  matrix[y][x] != undefined && (
-                    <MatrixSquare
-                      className={cx(
-                        'absolute',
-                        css({
-                          left: `${(offset.x + x) * width}px`,
-                          top: `${(offset.y + y) * height}px`
-                        })
-                      )}
-                      key={`${x}-${y}`}
-                      {...column}
-                    ></MatrixSquare>
-                  )
-                );
-              })}
-            </div>
-          );
+          return row.map((column, x) => {
+            return (
+              matrix[y][x] != undefined && (
+                <MatrixSquare
+                  className={cx(
+                    'absolute',
+                    css({
+                      left: `${(offset.x + x) * width}px`,
+                      top: `${(offset.y + y) * height}px`
+                    })
+                  )}
+                  key={`${x}-${y}`}
+                  {...column}
+                ></MatrixSquare>
+              )
+            );
+          });
         })}
       </>
     );
@@ -365,6 +385,8 @@ export default function Terminal(props: { className?: string }) {
   return (
     <div>
       <p>
+        {cursor?.x},{cursor?.y}
+        <br />
         {selectionStart?.x},{selectionStart?.y}
         <br />
         {selection?.x},{selection?.y},{selection?.w},{selection?.h},
@@ -379,7 +401,6 @@ export default function Terminal(props: { className?: string }) {
         {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
         <MatrixSquare
           className="opacity-0 absolute"
-          onClick={() => {}}
           ref={hiddenSquareRef}
           {...hiddenSquareProps}
         ></MatrixSquare>

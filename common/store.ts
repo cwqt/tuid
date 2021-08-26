@@ -43,7 +43,7 @@ export interface IStore {
   setMatrixSquareProperty: (
     x: number,
     y: number,
-    data: Partial<IMatrixSquare>
+    data: Partial<IMatrixSquare> | null
   ) => void;
 
   editor: IEditorOptions;
@@ -124,12 +124,15 @@ export const useStore = create<IStore>(set => ({
     }),
   setMatrixSquareProperty: (x, y, data) =>
     set(state => {
-      state.matrix[y][x] = state.matrix[y][x]
-        ? {
-            ...applyStyle(state.editor, state.matrix[y][x]),
-            ...data // explicit over-write
-          }
-        : applyStyle(state.editor, createMatrixSquare(data));
+      // for null values we're removing the grid square from the matrix
+      state.matrix[y][x] = data
+        ? state.matrix[y][x]
+          ? {
+              ...applyStyle(state.editor, state.matrix[y][x]),
+              ...data // explicit over-write
+            }
+          : applyStyle(state.editor, createMatrixSquare(data))
+        : null;
       return state;
     }),
 

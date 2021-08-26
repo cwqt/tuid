@@ -5,12 +5,10 @@ export function clamp(min, num, max) {
 }
 
 export function useKeyPress(): { key: string } {
-  // State for keeping track of pressed key
   const [keyPressed, setKeyPressed] = useState<{ key: string }>({
     key: undefined
   });
 
-  // If pressed key is our target key then set to true
   function downHandler({ key }): void {
     setKeyPressed({ key });
   }
