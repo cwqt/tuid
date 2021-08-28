@@ -1,4 +1,4 @@
-import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from 'components/matrix';
+import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from './interfaces';
 import FileSaver from 'file-saver';
 import create from 'zustand';
 import compression from './compression';
@@ -23,6 +23,7 @@ export const applyStyle = (
   editor: IEditorOptions,
   square: IMatrixSquare
 ): IMatrixSquare => ({
+  __id: square.__id,
   character: square.character,
   foreground: editor.foreground,
   background: editor.background,

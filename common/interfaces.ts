@@ -1,3 +1,5 @@
+import { nanoid } from 'nanoid';
+
 export interface IMatrixSquare {
   character: string; // any utf-8 character
   foreground: string; // hex color
@@ -6,11 +8,15 @@ export interface IMatrixSquare {
   strikeout: boolean;
   bold: boolean;
   italic: boolean;
+  __id: string;
 }
 
+export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#1f2937' as const;
+
 export const createMatrixSquare = (
-  square: Partial<IMatrixSquare> = {}
+  square: Partial<Omit<IMatrixSquare, '__id'>> = {}
 ): IMatrixSquare => ({
+  __id: nanoid(),
   character: square.character ?? ' ',
   foreground: square.foreground || '#fff',
   background: square.background || 'transparent',

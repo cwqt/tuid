@@ -10,12 +10,9 @@ import {
   TerminalMatrix
 } from 'common/interfaces';
 import React, { useEffect, useRef, useState } from 'react';
-import { Props } from 'react';
 import useDimensions from 'react-use-dimensions';
 import { applyStyle, useStore } from '../common/store';
 import { MatrixSquare } from './matrix-square';
-
-export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#1f2937' as const;
 
 const usePrevious = <T,>(value: T) => {
   const ref = useRef<T>();
@@ -24,12 +21,6 @@ const usePrevious = <T,>(value: T) => {
   });
   return ref.current;
 };
-
-const f =
-  <T1, T2>(arg1: T1) =>
-  (arg2: T2) => {
-    return { arg1, arg2 };
-  };
 
 export default function Terminal(props: { className?: string }) {
   const {
@@ -232,6 +223,7 @@ export default function Terminal(props: { className?: string }) {
       }
     | undefined
   >();
+  // sub-section of the matrix that is currently being dragged around
   const [dragSlice, setDragSlice] = useState<IMatrixSquare[][]>();
 
   // We'll use mouse-presses over the terminal to insert a special character into the terminal
@@ -371,7 +363,7 @@ export default function Terminal(props: { className?: string }) {
                       top: `${(offset.y + y) * height}px`
                     })
                   )}
-                  key={`${x}-${y}`}
+                  key={matrix[y][x].__id}
                   {...column}
                 ></MatrixSquare>
               )
@@ -400,8 +392,8 @@ export default function Terminal(props: { className?: string }) {
       >
         {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
         <MatrixSquare
-          className="opacity-0 absolute"
           ref={hiddenSquareRef}
+          className="opacity-0 absolute"
           {...hiddenSquareProps}
         ></MatrixSquare>
 
