@@ -313,29 +313,36 @@ export default function Terminal(props: { className?: string }) {
   type MatrixSquaresProps = {
     matrix: TerminalMatrix;
     offset?: { x: number; y: number };
+    zIndex?: number;
   };
   const MatrixSquares: React.FC<MatrixSquaresProps> = ({
     matrix,
-    offset
+    offset,
+    zIndex
   }: MatrixSquaresProps) => {
     offset = offset || { x: 0, y: 0 };
 
     return (
       <>
         {matrix.map((row, y) => {
-          return row.map((column, x) => {
+          return row.map((square, x) => {
             return (
               matrix[y][x] != undefined && (
                 <MatrixSquare
                   className={cx(
                     'absolute',
                     css({
+                      zIndex: zIndex || 1,
                       left: `${(offset.x + x) * width}px`,
-                      top: `${(offset.y + y) * height}px`
+                      top: `${(offset.y + y) * height}px`,
+                      border:
+                        square.character == ' '
+                          ? '1px solid rgba(255,255,255,0.2) !important'
+                          : 'none'
                     })
                   )}
                   key={matrix[y][x].__id}
-                  {...column}
+                  {...square}
                 ></MatrixSquare>
               )
             );
@@ -422,44 +429,66 @@ export default function Terminal(props: { className?: string }) {
             )}
 
             {/* if an area is currently selected (in the store), show that & handle dragging motion */}
-            {mode == 'select' && storeSelection && (
-              <div
-                className={cx(
-                  'absolute border border-dashed z-10 cursor-move',
-                  // highlight if currently in a dragging action
-                  activeDrag ? 'border-pink-500' : 'border-gray-100',
-                  css({
-                    left: `${
-                      (delta(activeDrag?.start, activeDrag?.end).x +
-                        storeSelection.x) *
-                      width
-                    }px`,
-                    top: `${
-                      (delta(activeDrag?.start, activeDrag?.end).y +
-                        storeSelection.y) *
-                      height
-                    }px`,
-                    width: `${storeSelection.w * width}px`,
-                    height: `${storeSelection.h * height}px`,
-                    backgroundColor: 'red'
-                  })
+            {mode == 'select' && (
+              <>
+                {/* highlight the currently selected area */}
+                {storeSelection && (
+                  <div
+                    className={cx(
+                      'absolute border border-dashed z-10 cursor-move',
+                      'border-gray-100',
+                      css({
+                        left: `${storeSelection.x * width}px`,
+                        top: `${storeSelection.y * height}px`,
+                        width: `${storeSelection.w * width}px`,
+                        height: `${storeSelection.h * height}px`
+                      })
+                    )}
+                  ></div>
                 )}
-              ></div>
-            )}
 
-            {/* drag around preview */}
-            {activeDragMatrixSlice && (
-              <MatrixSquares
-                // this matrix is a slice of the terminal matrix, so all indexes are starting from 0,0
-                // so we need some additional offsetting to the start point of the stored selection
-                // alongside the active drag offset so that they are in the same position as the
-                // thing we just selected
-                matrix={activeDragMatrixSlice}
-                offset={delta(activeDrag.start, {
-                  x: activeDrag.end.x + storeSelection.x,
-                  y: activeDrag.end.y + storeSelection.y
-                })}
-              ></MatrixSquares>
+                {/* highlight the currently dragged area */}
+                {activeDrag && (
+                  <div
+                    className={cx(
+                      'absolute border border-dashed z-10 cursor-move',
+                      // highlight if currently in a dragging action
+                      'border-pink-500',
+                      css({
+                        left: `${
+                          (delta(activeDrag?.start, activeDrag?.end).x +
+                            storeSelection.x) *
+                          width
+                        }px`,
+                        top: `${
+                          (delta(activeDrag?.start, activeDrag?.end).y +
+                            storeSelection.y) *
+                          height
+                        }px`,
+                        width: `${storeSelection.w * width}px`,
+                        height: `${storeSelection.h * height}px`,
+                        backgroundColor: terminalBackgroundColor
+                      })
+                    )}
+                  ></div>
+                )}
+
+                {/* drag around preview */}
+                {activeDragMatrixSlice && (
+                  <MatrixSquares
+                    // this matrix is a slice of the terminal matrix, so all indexes are starting from 0,0
+                    // so we need some additional offsetting to the start point of the stored selection
+                    // alongside the active drag offset so that they are in the same position as the
+                    // thing we just selected
+                    zIndex={10}
+                    matrix={activeDragMatrixSlice}
+                    offset={delta(activeDrag.start, {
+                      x: activeDrag.end.x + storeSelection.x,
+                      y: activeDrag.end.y + storeSelection.y
+                    })}
+                  ></MatrixSquares>
+                )}
+              </>
             )}
 
             {/* for input mode, show a cursor MatrixSquare with all the styles currently 
