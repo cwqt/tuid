@@ -23,6 +23,7 @@ import React, { useEffect, useMemo } from 'react';
 import Sidebar from '../components/sidebar';
 import { useStore } from '../common/store';
 import { css, cx } from '@emotion/css';
+import Matrices from '../components/matrix/methods';
 
 const TerminalNoSSR = dynamic(() => import('../components/matrix'), {
   ssr: false
@@ -33,7 +34,7 @@ export default function Home() {
 
   useEffect(() => {
     // setMatrix(98, 59);
-    setMatrix(40, 20);
+    setMatrix(Matrices.create(40, 20));
 
     'hello world'
       .split('')

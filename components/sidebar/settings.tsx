@@ -8,7 +8,6 @@ import {
   NumberInputStepper,
   Input,
   InputGroup,
-  InputRightAddon,
   InputLeftAddon,
   Button,
   Heading
@@ -20,9 +19,7 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 import { ArrowDownIcon, ArrowUpIcon, RepeatIcon } from '@chakra-ui/icons';
 import { IconButton } from '@chakra-ui/react';
-
-export const thisIsAnUnusedExport =
-  'this export only exists to disable fast refresh for this file';
+import Matrices from '../matrix/methods';
 
 export default function SettingsSidebar(props: { className?: string }) {
   const {
@@ -79,7 +76,9 @@ export default function SettingsSidebar(props: { className?: string }) {
             min={10}
             value={matrix[0]?.length || 0}
             onChange={(_, v) =>
-              v > 0 && v <= MAX_WIDTH && setMatrix(v, matrix.length)
+              v > 0 &&
+              v <= MAX_WIDTH &&
+              setMatrix(Matrices.create(v, matrix.length, matrix))
             }
           >
             <NumberInputField />
@@ -97,7 +96,9 @@ export default function SettingsSidebar(props: { className?: string }) {
             min={10}
             value={matrix.length}
             onChange={(_, v) =>
-              v > 0 && v <= MAX_HEIGHT && setMatrix(matrix[0].length || 0, v)
+              v > 0 &&
+              v <= MAX_HEIGHT &&
+              setMatrix(Matrices.create(matrix[0].length || 0, v, matrix))
             }
           >
             <NumberInputField />

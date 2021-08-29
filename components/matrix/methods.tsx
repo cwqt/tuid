@@ -1,5 +1,54 @@
 import { Area, Coordinates, IMatrixSquare } from 'common/interfaces';
 
+const create = (
+  width: number,
+  height: number,
+  m: IMatrixSquare[][] = []
+): IMatrixSquare[][] => {
+  let matrix: IMatrixSquare[][] =
+    // on initial load, matrix length will be 0x0, so create a fresh matrix
+    m.length == 0
+      ? Array.from({ length: height }, () =>
+          Array.from({ length: width }, undefined)
+        )
+      : m;
+
+  // if matrix was not starting from 0x0, then this matrix == m
+  if (matrix == m) {
+    // change in height
+    if (height != m.length) {
+      if (height < m.length) {
+        // height decremented
+        matrix = m.slice(0, height);
+      } else {
+        // height incremented
+        matrix = m.concat(
+          Array.from({ length: height - m.length }, () =>
+            Array.from({ length: width }, () => undefined)
+          )
+        );
+      }
+    }
+
+    // change in width
+    if (width != m[0].length) {
+      for (let y = 0; y < matrix.length - 1; y++) {
+        if (width < matrix[y].length) {
+          // width decremented
+          matrix[y] = m[y].slice(0, width);
+        } else {
+          // width incremented
+          matrix[y] = m[y].concat(
+            Array.from({ length: width - m[y].length }, () => undefined)
+          );
+        }
+      }
+    }
+  }
+
+  return matrix;
+};
+
 // Handle moving the current cursor position from arrow keypresses
 // account for wrapping / boundaries of terminal
 const retreatColumn = (
@@ -81,7 +130,9 @@ const AABB = (a: Area | Coordinates, b: Area | Coordinates) =>
   b.y <= a.y + (a['h'] || 0);
 
 const slice = (matrix: IMatrixSquare[][], area: Area) =>
-  matrix.slice(area.y, area.h).map(row => row.slice(area.x, area.w));
+  matrix
+    .slice(area.y, area.y + area.h)
+    .map(row => row.slice(area.x, area.x + area.w));
 
 const remove = (matrix: IMatrixSquare[][], area: Area): IMatrixSquare[][] =>
   matrix.map((row, y) =>
@@ -93,23 +144,24 @@ const remove = (matrix: IMatrixSquare[][], area: Area): IMatrixSquare[][] =>
 
 const insert = (
   matrix: IMatrixSquare[][],
-  submatrix: IMatrixSquare[][],
+  subMatrix: IMatrixSquare[][],
   at: Coordinates
 ): IMatrixSquare[][] =>
   // why yes i am a functional programmer how could you tell
   ((bb: Area) =>
     matrix.map((row, y) =>
       row.map((square, x) =>
-        AABB({ x, y }, bb) ? submatrix[y - at.y][x - at.x] : square
+        AABB({ x, y }, bb) ? subMatrix[y - at.y][x - at.x] : square
       )
     ))({
     x: at.x,
     y: at.y,
-    w: submatrix[0].length - 1,
-    h: submatrix.length - 1
+    w: subMatrix[0].length - 1,
+    h: subMatrix.length - 1
   });
 
 export default {
+  create,
   AABB,
   slice,
   insert,

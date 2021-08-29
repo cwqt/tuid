@@ -19,6 +19,7 @@ import { MatrixSquares } from './squares';
 export default function Terminal(props: { className?: string }) {
   const {
     matrix,
+    setMatrix,
     setMatrixSquareProperty,
     selectedSpecialCharacter,
     terminalBackgroundColor,
@@ -174,11 +175,12 @@ export default function Terminal(props: { className?: string }) {
     //   * inputting a character
     if (event.button == MouseButton.Left) {
       if (selectionStartPoint) {
-        // going to be ending this selection
-        // store the selection & then delete the in-progress one
+        // going to be ending this selection, store the selection &
+        // then delete the in-progress one
         setStoreSelection({ ...activeSelection! });
         setSelectionStartPoint(undefined);
         setActiveSelection(undefined);
+        return;
       }
 
       // if there's a stored selection, we may be beginning a drag, or just cancelling
@@ -221,15 +223,15 @@ export default function Terminal(props: { className?: string }) {
           // new position vector of the selected region
           const [nx, ny] = [storeSelection.x + dx, storeSelection.y + dy];
 
-          // 1st step is to clip all the old content out the matrix
-          // 2nd step is to splice in each drag slice between the current matrix row
-          // 3rd set all squares
-          Matrices.insert(
-            Matrices.remove(matrix, storeSelection),
-            activeDragMatrixSlice,
-            { x: nx, y: ny }
-          ).forEach((row, y) =>
-            row.forEach((square, x) => setMatrixSquareProperty(x, y, square))
+          // set the terminal matrix
+          setMatrix(
+            // insert sub-matrix into matrix
+            Matrices.insert(
+              // remove selected area
+              Matrices.remove(matrix, storeSelection),
+              activeDragMatrixSlice,
+              { x: nx, y: ny }
+            )
           );
 
           endDrag();
