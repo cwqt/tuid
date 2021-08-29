@@ -11,9 +11,9 @@ import {
 } from 'common/interfaces';
 import React, { useEffect, useRef, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
-import { applyStyle, useStore } from '../common/store';
-import Matrices from './matrix-methods';
-import { MatrixSquare } from './matrix-square';
+import { applyStyle, useStore } from '../../common/store';
+import Matrices from './methods';
+import { MatrixSquare } from './square';
 
 const usePrevious = <T,>(value: T) => {
   const ref = useRef<T>();
@@ -225,18 +225,13 @@ export default function Terminal(props: { className?: string }) {
           const [nx, ny] = [storeSelection.x + dx, storeSelection.y + dy];
 
           // 1st step is to clip all the old content out the matrix
-          let m = Matrices.remove(matrix, storeSelection);
-
-          console.log(m);
-
           // 2nd step is to splice in each drag slice between the current matrix row
-          m = Matrices.insert(matrix, activeDragMatrixSlice, {
-            x: nx,
-            y: ny
-          });
-
           // 3rd set all squares
-          m.forEach((row, y) =>
+          Matrices.insert(
+            Matrices.remove(matrix, storeSelection),
+            activeDragMatrixSlice,
+            { x: nx, y: ny }
+          ).forEach((row, y) =>
             row.forEach((square, x) => setMatrixSquareProperty(x, y, square))
           );
 
@@ -445,7 +440,8 @@ export default function Terminal(props: { className?: string }) {
                       height
                     }px`,
                     width: `${storeSelection.w * width}px`,
-                    height: `${storeSelection.h * height}px`
+                    height: `${storeSelection.h * height}px`,
+                    backgroundColor: 'red'
                   })
                 )}
               ></div>

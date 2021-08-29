@@ -5,12 +5,17 @@
  *   [x] set font styling; bold, italic, underline, strikeout
  *   [x] vary dimensions of the terminal
  *   [x] change color palette & have change affect terminal
+ *   [ ] bucket fill follow outline characters
+ *   [ ] drag & place outline characters
  *
  * terminal
  *   [x] 2d grid with monospace characters
- *   [ ] select region
+ *   [x] select region
+ *       [x] drag to move all characters in selected region
  *       [ ] apply style across selected region
- *       [ ] drag to move all characters in selected region
+ *
+ * canvas
+ *   [ ] convert terminal to using html5 canvas for performance
  *  */
 
 import dynamic from 'next/dynamic';

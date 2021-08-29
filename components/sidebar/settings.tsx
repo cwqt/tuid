@@ -13,7 +13,7 @@ import {
   Button,
   Heading
 } from '@chakra-ui/react';
-import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from 'components/matrix';
+import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from 'common/interfaces';
 import { useStore } from 'common/store';
 import React, { ChangeEvent, useRef } from 'react';
 import { useEffect } from 'react';

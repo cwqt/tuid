@@ -126,21 +126,3 @@ export default {
     }
   }
 };
-
-// const m = matrix.reduce<TerminalMatrix>((m, row, y) => {
-//   console.log(y);
-
-//   if (ny <= y && y <= ny) {
-//     console.log(y, ny);
-
-//     m[y] = [
-//       ...row.slice(0, start.x),
-//       ...activeDragMatrixSlice[y - ny],
-//       ...row.slice(start.x + (end.x - start.x))
-//     ];
-//   } else {
-//     m[y] = row;
-//   }
-
-//   return m;
-// }, []);

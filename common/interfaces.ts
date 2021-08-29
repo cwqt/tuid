@@ -44,6 +44,7 @@ export interface IEditorOptions {
 }
 
 export type ICompressedMatrix = {
+  // x,y: [compressed]
   [index in `${string},${string}`]: ICompressedMatrixSquare;
 };
 

@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid';
 import color from './color';
 import {
   ExportedState,
@@ -11,6 +12,7 @@ const decompressMatrixSquare = (
   square: ICompressedMatrixSquare,
   colors: ExportedState['matrix']['colors']
 ): IMatrixSquare => ({
+  __id: nanoid(),
   character: square[0],
   bold: square[1] == 1 ? true : false,
   italic: square[2] == 1 ? true : false,
