@@ -12,13 +12,7 @@ import {
 import React, { useEffect, useRef, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
 import { applyStyle, useStore } from '../common/store';
-import {
-  advanceColumn,
-  advanceRow,
-  retreatColumn,
-  retreatRow,
-  sliceMatrix
-} from './matrix-methods';
+import Matrices from './matrix-methods';
 import { MatrixSquare } from './matrix-square';
 
 const usePrevious = <T,>(value: T) => {
@@ -105,28 +99,34 @@ export default function Terminal(props: { className?: string }) {
     if (x != undefined && y != undefined) {
       switch (key) {
         case 'Delete': {
-          const { x: nx, y: ny } = advanceColumn({ x, y }, matrix);
+          const { x: nx, y: ny } = Matrices.position.cols.advance(
+            { x, y },
+            matrix
+          );
           setCursor({ x: nx, y: ny });
           setMatrixSquareProperty(nx, ny, null);
           break;
         }
         case 'Backspace': {
-          const { x: nx, y: ny } = retreatColumn({ x, y }, matrix);
+          const { x: nx, y: ny } = Matrices.position.cols.retreat(
+            { x, y },
+            matrix
+          );
           setCursor({ x: nx, y: ny });
           setMatrixSquareProperty(nx, ny, null);
           break;
         }
         case 'ArrowDown':
-          setCursor(advanceRow({ x, y }, matrix));
+          setCursor(Matrices.position.rows.advance({ x, y }, matrix));
           break;
         case 'ArrowUp':
-          setCursor(retreatRow({ x, y }, matrix));
+          setCursor(Matrices.position.rows.retreat({ x, y }, matrix));
           break;
         case 'ArrowLeft':
-          setCursor(retreatColumn({ x, y }, matrix));
+          setCursor(Matrices.position.cols.retreat({ x, y }, matrix));
           break;
         case 'ArrowRight':
-          setCursor(advanceColumn({ x, y }, matrix));
+          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
           break;
         case 'Shift':
         case 'Meta':
@@ -140,7 +140,7 @@ export default function Terminal(props: { className?: string }) {
           break;
         default:
           setMatrixSquareProperty(x, y, { character: key });
-          setCursor(advanceColumn({ x, y }, matrix));
+          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
       }
     }
   }, [keyPressed]);
@@ -161,8 +161,9 @@ export default function Terminal(props: { className?: string }) {
     | undefined
   >();
   // sub-section of the matrix that is currently being dragged around
-  const [activeDragMatrixSlice, setActiveDragMatrixSlice] =
-    useState<IMatrixSquare[][]>();
+  const [activeDragMatrixSlice, setActiveDragMatrixSlice] = useState<
+    IMatrixSquare[][] | undefined
+  >();
 
   // We'll use mouse-presses over the terminal to insert a special character into the terminal
   const handleMouseDown = () => {
@@ -190,27 +191,24 @@ export default function Terminal(props: { className?: string }) {
         if (!activeDrag) {
           // check if this is the start of the drag operation by checking click within
           // bounding box of selected region
-          if (
-            // AABB
-            s.x <= c.x &&
-            c.x <= s.x + s.w &&
-            s.y <= c.y &&
-            c.y <= s.y + s.h
-          ) {
+          if (Matrices.AABB(s, c)) {
             // starting a drag, take a slice of the area we're going to be shifting around
             // so it can be visualised on top of the existing matrix squares
-            setActiveDragMatrixSlice(
-              sliceMatrix(matrix, {
-                x: s.x,
-                y: s.y,
-                w: s.x + s.w,
-                h: s.y + s.h
-              })
-            );
+            const slice = Matrices.slice(matrix, {
+              x: s.x,
+              y: s.y,
+              w: s.x + s.w,
+              h: s.y + s.h
+            });
 
+            // at-least one square needs to have something in it
+            if (slice.flat().every(v => v == null)) return endSelection();
+
+            // begin the drag!
+            setActiveDragMatrixSlice(slice);
             setActiveDrag({
               start: { x: c.x, y: c.y },
-              end: { x: s.x, y: s.y }
+              end: { x: c.x, y: c.y }
             });
           } else {
             // clicked outside region, ending selection
@@ -218,6 +216,29 @@ export default function Terminal(props: { className?: string }) {
           }
         } else {
           // there is an active drag in progress, and this click is putting it down
+          const { start, end } = activeDrag;
+
+          // is the translation vector of the drag
+          const { x: dx, y: dy } = delta(start, end);
+
+          // new position vector of the selected region
+          const [nx, ny] = [storeSelection.x + dx, storeSelection.y + dy];
+
+          // 1st step is to clip all the old content out the matrix
+          let m = Matrices.remove(matrix, storeSelection);
+
+          console.log(m);
+
+          // 2nd step is to splice in each drag slice between the current matrix row
+          m = Matrices.insert(matrix, activeDragMatrixSlice, {
+            x: nx,
+            y: ny
+          });
+
+          // 3rd set all squares
+          m.forEach((row, y) =>
+            row.forEach((square, x) => setMatrixSquareProperty(x, y, square))
+          );
 
           endDrag();
         }
@@ -250,6 +271,7 @@ export default function Terminal(props: { className?: string }) {
 
   const endDrag = () => {
     setStoreSelection(undefined);
+    setActiveDragMatrixSlice(undefined);
     setActiveDrag(undefined);
   };
 
@@ -331,20 +353,20 @@ export default function Terminal(props: { className?: string }) {
   const delta = (
     start: Coordinates = { x: 0, y: 0 },
     end: Coordinates = { x: 0, y: 0 }
-  ) => ({
-    x: start.x - end.x,
-    y: start.y - end.y
+  ): Coordinates => ({
+    x: end.x - start.x,
+    y: end.y - start.y
   });
 
   return (
     <div>
-      <p>
+      <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
         cursor: {cursor?.x},{cursor?.y}
         <br />
         selection start: {selectionStartPoint?.x},{selectionStartPoint?.y}
         <br />
         active selection: {activeSelection?.x},{activeSelection?.y},
-        {activeSelection?.w},{activeSelection?.h},
+        {activeSelection?.w},{activeSelection?.h}
         <br />
         active drag start:
         {activeDrag?.start?.x},{activeDrag?.start?.y}
@@ -413,12 +435,12 @@ export default function Terminal(props: { className?: string }) {
                   activeDrag ? 'border-pink-500' : 'border-gray-100',
                   css({
                     left: `${
-                      (delta(activeDrag?.end, activeDrag?.start).x +
+                      (delta(activeDrag?.start, activeDrag?.end).x +
                         storeSelection.x) *
                       width
                     }px`,
                     top: `${
-                      (delta(activeDrag?.end, activeDrag?.start).y +
+                      (delta(activeDrag?.start, activeDrag?.end).y +
                         storeSelection.y) *
                       height
                     }px`,
@@ -432,13 +454,14 @@ export default function Terminal(props: { className?: string }) {
             {/* drag around preview */}
             {activeDragMatrixSlice && (
               <MatrixSquares
-                // this matrix is a sub-slice, so all indexes are starting from 0,0
+                // this matrix is a slice of the terminal matrix, so all indexes are starting from 0,0
                 // so we need some additional offsetting to the start point of the stored selection
-                // alongside the active drag offset
+                // alongside the active drag offset so that they are in the same position as the
+                // thing we just selected
                 matrix={activeDragMatrixSlice}
-                offset={delta(activeDrag.end, {
-                  x: activeDrag.start.x - storeSelection.x,
-                  y: activeDrag.start.y - storeSelection.y
+                offset={delta(activeDrag.start, {
+                  x: activeDrag.end.x + storeSelection.x,
+                  y: activeDrag.end.y + storeSelection.y
                 })}
               ></MatrixSquares>
             )}

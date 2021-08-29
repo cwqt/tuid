@@ -32,7 +32,7 @@ export default function Home() {
     'hello world'
       .split('')
       .forEach((c, idx) =>
-        setMatrixSquareProperty(idx + 5, 10, { character: c })
+        setMatrixSquareProperty(idx + 1, 1, { character: c })
       );
   }, []);
 

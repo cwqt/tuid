@@ -1,9 +1,9 @@
 // Handle moving the current cursor position from arrow keypresses
 
-import { Area, IMatrixSquare } from 'common/interfaces';
+import { Area, Coordinates, IMatrixSquare } from 'common/interfaces';
 
 // account for wrapping / boundaries of terminal
-export const retreatColumn = (
+const retreatColumn = (
   current: { x: number; y: number },
   matrix: any[][]
 ): { x: number; y: number } => {
@@ -24,7 +24,7 @@ export const retreatColumn = (
   return { x: nx, y: ny };
 };
 
-export const advanceColumn = (
+const advanceColumn = (
   current: { x: number; y: number },
   matrix: any[][]
 ): { x: number; y: number } => {
@@ -46,7 +46,7 @@ export const advanceColumn = (
   return { x: nx, y: ny };
 };
 
-export const advanceRow = (
+const advanceRow = (
   current: { x: number; y: number },
   matrix: any[][]
 ): { x: number; y: number } => {
@@ -60,7 +60,7 @@ export const advanceRow = (
   return { x: nx, y: ny };
 };
 
-export const retreatRow = (
+const retreatRow = (
   current: { x: number; y: number },
   matrix: any[][]
 ): { x: number; y: number } => {
@@ -74,5 +74,73 @@ export const retreatRow = (
   return { x: nx, y: ny };
 };
 
-export const sliceMatrix = (matrix: IMatrixSquare[][], area: Area) =>
+// axis-aligned bounding box collision detection
+const AABB = (a: Area | Coordinates, b: Area | Coordinates) =>
+  a.x <= b.x + (b['w'] || 0) &&
+  b.x <= a.x + (a['w'] || 0) &&
+  a.y <= b.y + (b['h'] || 0) &&
+  b.y <= a.y + (a['h'] || 0);
+
+const slice = (matrix: IMatrixSquare[][], area: Area) =>
   matrix.slice(area.y, area.h).map(row => row.slice(area.x, area.w));
+
+const remove = (matrix: IMatrixSquare[][], area: Area): IMatrixSquare[][] =>
+  matrix.map((row, y) =>
+    row.map((square, x) =>
+      // null all those within the area bounding box
+      AABB(area, { x, y }) ? null : square
+    )
+  );
+
+const insert = (
+  matrix: IMatrixSquare[][],
+  submatrix: IMatrixSquare[][],
+  at: Coordinates
+): IMatrixSquare[][] =>
+  // why yes i am a functional programmer how could you tell
+  ((bb: Area) =>
+    matrix.map((row, y) =>
+      row.map((square, x) =>
+        AABB({ x, y }, bb) ? submatrix[y - at.y][x - at.x] : square
+      )
+    ))({
+    x: at.x,
+    y: at.y,
+    w: submatrix[0].length - 1,
+    h: submatrix.length - 1
+  });
+
+export default {
+  AABB,
+  slice,
+  insert,
+  remove,
+  position: {
+    rows: {
+      advance: advanceRow,
+      retreat: retreatRow
+    },
+    cols: {
+      advance: advanceColumn,
+      retreat: retreatColumn
+    }
+  }
+};
+
+// const m = matrix.reduce<TerminalMatrix>((m, row, y) => {
+//   console.log(y);
+
+//   if (ny <= y && y <= ny) {
+//     console.log(y, ny);
+
+//     m[y] = [
+//       ...row.slice(0, start.x),
+//       ...activeDragMatrixSlice[y - ny],
+//       ...row.slice(start.x + (end.x - start.x))
+//     ];
+//   } else {
+//     m[y] = row;
+//   }
+
+//   return m;
+// }, []);

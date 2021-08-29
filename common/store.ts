@@ -127,12 +127,15 @@ export const useStore = create<IStore>(set => ({
     set(state => {
       // for null values we're removing the grid square from the matrix
       state.matrix[y][x] = data
-        ? state.matrix[y][x]
-          ? {
+        ? // data exists, check if square exists for overwrite or create
+          state.matrix[y][x]
+          ? // overwrite
+            {
               ...applyStyle(state.editor, state.matrix[y][x]),
               ...data // explicit over-write
             }
-          : applyStyle(state.editor, createMatrixSquare(data))
+          : // no square, create new at this point
+            applyStyle(state.editor, createMatrixSquare(data))
         : null;
       return state;
     }),
