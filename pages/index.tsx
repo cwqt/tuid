@@ -27,7 +27,7 @@ export default function Home() {
 
   useEffect(() => {
     // setMatrix(98, 59);
-    setMatrix(30, 30);
+    setMatrix(40, 20);
 
     'hello world'
       .split('')

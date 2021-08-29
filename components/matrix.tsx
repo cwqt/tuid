@@ -210,13 +210,15 @@ export default function Terminal(props: { className?: string }) {
   }, [keyPressed]);
 
   // holds the current in-progress selection
-  const [selectionStart, setSelectionStart] = useState<
+  const [selectionStartPoint, setSelectionStartPoint] = useState<
     Coordinates | undefined
   >();
-  const [selection, setSelection] = useState<SelectionRegion | undefined>();
+  const [inProgressSelection, setInProgressSelection] = useState<
+    SelectionRegion | undefined
+  >();
   // holds the current state of if a drag action is taking place
   // using a start & end we can find a delta to move all contents by at the end of a drag
-  const [dragLocation, setDragLocation] = useState<
+  const [selectedArea, setSelectedArea] = useState<
     | {
         start: Coordinates;
         end: Coordinates;
@@ -224,7 +226,8 @@ export default function Terminal(props: { className?: string }) {
     | undefined
   >();
   // sub-section of the matrix that is currently being dragged around
-  const [dragSlice, setDragSlice] = useState<IMatrixSquare[][]>();
+  const [selectedAreaSlice, setSelectedAreaSlice] =
+    useState<IMatrixSquare[][]>();
 
   // We'll use mouse-presses over the terminal to insert a special character into the terminal
   const handleMouseDown = () => {
@@ -233,16 +236,16 @@ export default function Terminal(props: { className?: string }) {
       // check for a currently stored selection, i.e. one has currently _just_ been made
       if (!storeSelection) {
         // check for a starting point, if not then this click is ending the selection
-        if (!selectionStart) {
+        if (!selectionStartPoint) {
           setStoreSelection(undefined);
-          setSelectionStart({ x: cursor.x, y: cursor.y });
-          setSelection({ x: cursor.x, y: cursor.y, w: 1, h: 1 });
+          setSelectionStartPoint({ x: cursor.x, y: cursor.y });
+          setInProgressSelection({ x: cursor.x, y: cursor.y, w: 1, h: 1 });
         } else {
           // selection ending
           // store the selection & then delete the in-progress one
-          setStoreSelection({ ...selection! });
-          setSelectionStart(undefined);
-          setSelection(undefined);
+          setStoreSelection({ ...inProgressSelection! });
+          setSelectionStartPoint(undefined);
+          setInProgressSelection(undefined);
         }
       } else {
         // there's current selection area
@@ -250,7 +253,7 @@ export default function Terminal(props: { className?: string }) {
         // check if this is the start of the drag operation by checking click within
         // bounding box of selected region
         if (
-          !dragLocation &&
+          !selectedArea &&
           // AABB
           s.x <= c.x &&
           c.x <= s.x + s.w &&
@@ -263,8 +266,8 @@ export default function Terminal(props: { className?: string }) {
             .slice(s.y, s.y + s.h)
             .map(row => row.slice(s.x, s.x + s.w));
 
-          setDragSlice(slice);
-          setDragLocation({
+          setSelectedAreaSlice(slice);
+          setSelectedArea({
             start: { x: c.x, y: c.y },
             end: { x: s.x, y: s.y }
           });
@@ -295,17 +298,17 @@ export default function Terminal(props: { className?: string }) {
 
   const endSelection = () => {
     setStoreSelection(undefined);
-    setSelectionStart(undefined);
-    setSelection(undefined);
+    setSelectionStartPoint(undefined);
+    setInProgressSelection(undefined);
   };
 
   // in select mode, listen for mouse movements to expand the current in-progress selection area
   useEffect(() => {
     if (mode == 'select') {
       // check in select mode & there is a current in progress selection
-      if (selectionStart && selection) {
+      if (selectionStartPoint && inProgressSelection) {
         // c: current point, s: initial point
-        const [c, s] = [{ ...cursor }, { ...selectionStart }];
+        const [c, s] = [{ ...cursor }, { ...selectionStartPoint }];
 
         let [w, h] = [Math.abs(c.x - s.x), Math.abs(c.y - s.y)];
         let [x, y] = [s.x, s.y];
@@ -320,13 +323,13 @@ export default function Terminal(props: { className?: string }) {
           w = Math.abs(c.x - s.x);
         }
 
-        setSelection({ x, y, w, h });
+        setInProgressSelection({ x, y, w, h });
       }
 
       // check if there's a current drag action
-      if (dragLocation) {
-        setDragLocation({
-          start: dragLocation.start,
+      if (selectedArea) {
+        setSelectedArea({
+          start: selectedArea.start,
           end: { x: cursor.x, y: cursor.y }
         });
       }
@@ -379,9 +382,10 @@ export default function Terminal(props: { className?: string }) {
       <p>
         {cursor?.x},{cursor?.y}
         <br />
-        {selectionStart?.x},{selectionStart?.y}
+        {selectionStartPoint?.x},{selectionStartPoint?.y}
         <br />
-        {selection?.x},{selection?.y},{selection?.w},{selection?.h},
+        {inProgressSelection?.x},{inProgressSelection?.y},
+        {inProgressSelection?.w},{inProgressSelection?.h},
       </p>
 
       <div
@@ -405,7 +409,7 @@ export default function Terminal(props: { className?: string }) {
           )}
           onMouseDown={handleMouseDown}
         >
-          {/* has no padding, so no need to do any offset calculations to find grid square
+          {/* this div has no padding, so no need to do any offset calculations to find grid square
               all matrix squares are positioned relative to this container, offsetted by
               their x * width & y * height */}
           <div
@@ -419,32 +423,33 @@ export default function Terminal(props: { className?: string }) {
             )}
           >
             {/* for selection mode, outline progressing selection area */}
-            {mode == 'select' && selection && selectionStart && (
+            {mode == 'select' && inProgressSelection && selectionStartPoint && (
               <div
                 className={cx(
                   'absolute border border-gray-100 z-10',
                   css({
-                    left: `${selection.x * width}px`,
-                    top: `${selection.y * height}px`,
-                    width: `${selection.w * width}px`,
-                    height: `${selection.h * height}px`
+                    left: `${inProgressSelection.x * width}px`,
+                    top: `${inProgressSelection.y * height}px`,
+                    width: `${inProgressSelection.w * width}px`,
+                    height: `${inProgressSelection.h * height}px`
                   })
                 )}
               ></div>
             )}
+
             {/* if an area is currently selected (in the store), show that & handle dragging motion */}
             {mode == 'select' && storeSelection && (
               <div
                 className={cx(
                   'absolute border border-dashed z-10 cursor-move',
                   // highlight if currently in a dragging action
-                  dragLocation ? 'border-pink-500' : 'border-gray-100',
+                  selectedArea ? 'border-pink-500' : 'border-gray-100',
                   css({
                     left: `${
-                      ((dragLocation?.end?.x || 0) + storeSelection.x) * width
+                      ((selectedArea?.end?.x || 0) + storeSelection.x) * width
                     }px`,
                     top: `${
-                      ((dragLocation?.end?.y || 0) + storeSelection.y) * height
+                      ((selectedArea?.end?.y || 0) + storeSelection.y) * height
                     }px`,
                     width: `${storeSelection.w * width}px`,
                     height: `${storeSelection.h * height}px`
@@ -454,10 +459,10 @@ export default function Terminal(props: { className?: string }) {
             )}
 
             {/* drag around */}
-            {dragSlice && (
+            {selectedAreaSlice && (
               <MatrixSquares
-                matrix={dragSlice}
-                offset={dragLocation.end}
+                matrix={selectedAreaSlice}
+                offset={selectedArea.end}
               ></MatrixSquares>
             )}
 
@@ -484,7 +489,7 @@ export default function Terminal(props: { className?: string }) {
                     matrix[cursor.y][cursor.x]?.character ||
                     cursorStyle.character
                   }
-                  is_bordered={true}
+                  isBordered={true}
                 ></MatrixSquare>
               )}
 

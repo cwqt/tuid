@@ -4,7 +4,7 @@ import { IMatrixSquare } from 'common/interfaces';
 import { memo } from 'react';
 
 type UiMatrixSquare = IMatrixSquare & {
-  is_bordered: boolean;
+  isBordered: boolean;
   className: string;
 };
 
@@ -17,7 +17,7 @@ export const MatrixSquare = memo(
           props.className,
           'font-mono leading-4 text-sm',
           css({
-            border: `${props.is_bordered ? 1 : 0}px solid white`,
+            border: `${props.isBordered ? 1 : 0}px solid white`,
             width: '1ch',
             height: '1em',
             color: props.foreground,
