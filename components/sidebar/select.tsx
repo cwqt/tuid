@@ -1,14 +1,21 @@
-import { useStore } from 'common/store';
-import { useEffect } from 'react';
-import { Button, ButtonGroup } from '@chakra-ui/react';
+import { Button } from '@chakra-ui/react';
 import { css, cx } from '@emotion/css';
-import Matrices from '../matrix/methods';
 import { createMatrixSquare } from 'common/interfaces';
+import { useStore } from 'common/store';
+import Matrices from '../matrix/methods';
 
 export default function SelectSidebar(props: { className?: string }) {
   const { selection, editor, matrix, setMatrix } = useStore();
 
-  const clearSelectedArea = () => {};
+  const clearSelectedArea = () => {
+    setMatrix(
+      Matrices.insert(
+        matrix,
+        Matrices.slice(matrix, selection).map(row => row.map(square => null)),
+        selection
+      )
+    );
+  };
 
   const fillSelectedArea = () => {
     setMatrix(

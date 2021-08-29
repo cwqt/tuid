@@ -219,6 +219,7 @@ export default function Terminal(props: { className?: string }) {
 
           // is the translation vector of the drag
           const { x: dx, y: dy } = delta(start, end);
+          // const { x: ox, y: oy } = delta();
 
           // new position vector of the selected region
           const [nx, ny] = [storeSelection.x + dx, storeSelection.y + dy];
@@ -227,7 +228,7 @@ export default function Terminal(props: { className?: string }) {
           setMatrix(
             // insert sub-matrix into matrix
             Matrices.insert(
-              // remove selected area
+              // remove selected area from matrix
               Matrices.remove(matrix, storeSelection),
               activeDragMatrixSlice,
               { x: nx, y: ny }
