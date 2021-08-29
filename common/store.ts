@@ -7,7 +7,7 @@ import {
   ExportedState,
   IEditorOptions,
   IMatrixSquare,
-  SelectionRegion,
+  Area,
   TerminalMatrix
 } from './interfaces';
 
@@ -60,8 +60,8 @@ export interface IStore {
   setMode: (mode: InputMode) => void;
 
   // selection area: x,y,width,height
-  selection: SelectionRegion | undefined;
-  setSelection: (region: SelectionRegion) => void;
+  selection: Area | undefined;
+  setSelection: (region: Area) => void;
 
   // import & export
   exportState: () => void;
