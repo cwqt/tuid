@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Coordinates } from './interfaces';
 
-export function clamp(min, num, max) {
-  return num <= min ? min : num >= max ? max : num;
-}
+export const clamp = (min: number, num: number, max: number): number =>
+  num <= min ? min : num >= max ? max : num;
 
 export function useKeyPress(): { key: string } {
   const [keyPressed, setKeyPressed] = useState<{ key: string }>({
@@ -24,3 +24,19 @@ export function useKeyPress(): { key: string } {
 
   return keyPressed;
 }
+
+export const delta = (
+  start: Coordinates = { x: 0, y: 0 },
+  end: Coordinates = { x: 0, y: 0 }
+): Coordinates => ({
+  x: end.x - start.x,
+  y: end.y - start.y
+});
+
+export const usePrevious = <T>(value: T) => {
+  const ref = useRef<T>();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+};

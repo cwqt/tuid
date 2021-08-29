@@ -15,7 +15,7 @@ export const MatrixSquare = memo(
         ref={ref}
         className={cx(
           props.className,
-          'font-mono leading-4 text-sm',
+          'font-mono leading-4 text-sm select-none',
           css({
             border: `${props.isBordered ? 1 : 0}px solid white`,
             width: '1ch',

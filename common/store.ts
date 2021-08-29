@@ -33,8 +33,6 @@ export const applyStyle = (
   italic: editor.italic
 });
 
-export type InputMode = 'input' | 'select';
-
 export interface IStore {
   fileTitle: string;
   setFileTitle: (title: string) => void;
@@ -55,9 +53,6 @@ export interface IStore {
 
   terminalBackgroundColor: string;
   setTerminalBackgroundColor: (hex: string) => void;
-
-  mode: InputMode;
-  setMode: (mode: InputMode) => void;
 
   // selection area: x,y,width,height
   selection: Area | undefined;
@@ -167,9 +162,6 @@ export const useStore = create<IStore>(set => ({
   terminalBackgroundColor: DEFAULT_TERMINAL_BACKGROUND_COLOR,
   setTerminalBackgroundColor: hex =>
     set(state => ({ terminalBackgroundColor: hex })),
-
-  mode: 'input',
-  setMode: mode => set(state => ({ mode: mode })),
 
   selection: undefined,
   setSelection: area => set(state => ({ selection: area })),

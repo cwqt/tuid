@@ -72,3 +72,8 @@ export interface ExportedState {
 
 export type Area = { x: number; y: number; w: number; h: number };
 export type Coordinates = { x: number; y: number };
+
+export enum MouseButton {
+  Left = 0,
+  Right = 2
+}

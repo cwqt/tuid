@@ -1,7 +1,6 @@
-// Handle moving the current cursor position from arrow keypresses
-
 import { Area, Coordinates, IMatrixSquare } from 'common/interfaces';
 
+// Handle moving the current cursor position from arrow keypresses
 // account for wrapping / boundaries of terminal
 const retreatColumn = (
   current: { x: number; y: number },

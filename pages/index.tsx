@@ -22,6 +22,7 @@ import dynamic from 'next/dynamic';
 import React, { useEffect, useMemo } from 'react';
 import Sidebar from '../components/sidebar';
 import { useStore } from '../common/store';
+import { css, cx } from '@emotion/css';
 
 const TerminalNoSSR = dynamic(() => import('../components/matrix'), {
   ssr: false
@@ -46,8 +47,10 @@ export default function Home() {
       {/* Hold off first render until matrix value has been set */}
       {matrix.length && (
         <>
-          <Sidebar className="p-4 m-4 shadow rounded w-1/4"></Sidebar>
-          <TerminalNoSSR className="h-full"></TerminalNoSSR>
+          <Sidebar
+            className={cx('m-4 shadow rounded', css({ minWidth: '340px' }))}
+          ></Sidebar>
+          <TerminalNoSSR className="h-full flex-shrink-1"></TerminalNoSSR>
         </>
       )}
     </div>

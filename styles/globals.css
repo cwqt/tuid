@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 
 html,
 body {
@@ -19,6 +19,12 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+/* hide ugly chakra :focus ARIA outlines */
+*:focus {
+  outline: 0 !important;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0) !important;
 }
 
 /* ./styles/globals.css */
