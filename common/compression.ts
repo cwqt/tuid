@@ -27,7 +27,7 @@ const compressMatrixSquare = (
   colors: ExportedState['matrix']['colors']
 ): ICompressedMatrixSquare => [
   square.character,
-  square.background ? 1 : 0,
+  square.bold ? 1 : 0,
   square.italic ? 1 : 0,
   square.underline ? 1 : 0,
   square.strikeout ? 1 : 0,

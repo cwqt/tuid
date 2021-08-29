@@ -48,7 +48,10 @@ export default function Home() {
       {matrix.length && (
         <>
           <Sidebar
-            className={cx('m-4 shadow rounded', css({ minWidth: '340px' }))}
+            className={cx(
+              'm-4 shadow rounded',
+              css({ minWidth: '340px', maxWidth: '340px' })
+            )}
           ></Sidebar>
           <TerminalNoSSR className="h-full flex-shrink-1"></TerminalNoSSR>
         </>

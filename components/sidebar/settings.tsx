@@ -154,7 +154,7 @@ export default function SettingsSidebar(props: { className?: string }) {
         </InputGroup>
       </FormControl>
 
-      <div className="flex space-x-4 mt-4">
+      <div className="flex space-x-2 mt-4">
         <Button
           rightIcon={<ArrowDownIcon />}
           isFullWidth
@@ -162,7 +162,7 @@ export default function SettingsSidebar(props: { className?: string }) {
           variant="solid"
           onClick={exportState}
         >
-          Export to File
+          Export
         </Button>
         <Button
           rightIcon={<ArrowUpIcon />}
@@ -171,7 +171,7 @@ export default function SettingsSidebar(props: { className?: string }) {
           variant="outline"
           onClick={requestFileForStateImport}
         >
-          Import from File
+          Import
         </Button>
 
         <input
