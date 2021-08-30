@@ -30,7 +30,7 @@ export default function Sidebar(props: { className?: string }) {
         <span className="ml-2 mb-1">tui designer</span>
       </Heading>
 
-      <Accordion mb={4} allowToggle>
+      <Accordion mb={4} allowToggle defaultIndex={0}>
         <AccordionItem>
           <h2>
             <AccordionButton>
