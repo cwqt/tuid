@@ -12,6 +12,7 @@ import {
 import React, { MouseEventHandler, useEffect, useRef, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
 import { applyStyle, useStore } from '../../common/store';
+import { MatrixCanvas } from './canvas';
 import Matrices from './methods';
 import { MatrixSquare } from './square';
 import { MatrixSquares } from './squares';
@@ -61,7 +62,8 @@ export default function Terminal(props: { className?: string }) {
   // find x,y position of square in the grid
   const hiddenSquareProps = createMatrixSquare({ character: 'X' });
   const [hiddenSquareRef, { width, height }] = useDimensions();
-  useEffect(() => {
+
+  const handleMouseMove = (mouse: Coordinates) => {
     if (width && height && mouse?.x && mouse?.y && matrix) {
       // weird bug where typing will cause cursor to switch back and forth
       // even though the mouse position hasn't actually move - i suspect this
@@ -78,14 +80,16 @@ export default function Terminal(props: { className?: string }) {
       // set to last known position when leaving terminal bounding box
       setCursor({ x: cursor?.x, y: cursor?.y });
     }
-  }, [mouse]);
+  };
+
+  useEffect(() => handleMouseMove({ x: mouse?.x, y: mouse?.y }), [mouse]);
 
   // Listen for keyboard events - store key state in object so that subsequent presses of the
   // same key trigger useEffect as value is pointing to a different location
   const keyPressed = useKeyPress();
-  useEffect(() => {
+
+  const handleKeyDown = (key: string) => {
     if (storeSelection || !cursor) return;
-    const { key } = keyPressed;
     const { x, y } = cursor;
 
     // Only handle keypresses if the mouse is currently over this grid square
@@ -136,7 +140,9 @@ export default function Terminal(props: { className?: string }) {
           setCursor(Matrices.position.cols.advance({ x, y }, matrix));
       }
     }
-  }, [keyPressed]);
+  };
+
+  useEffect(() => handleKeyDown(keyPressed.key), [keyPressed]);
 
   // holds the current in-progress selection
   const [selectionStartPoint, setSelectionStartPoint] = useState<
@@ -159,9 +165,9 @@ export default function Terminal(props: { className?: string }) {
   >();
 
   // We'll use mouse-presses over the terminal to insert a special character into the terminal
-  const handleMouseDown: MouseEventHandler<HTMLDivElement> = event => {
+  const handleMouseDown = (button: MouseButton) => {
     // right click starts off an active selection
-    if (event.button == MouseButton.Right) {
+    if (button == MouseButton.Right) {
       if (!selectionStartPoint) {
         setStoreSelection(undefined);
         setSelectionStartPoint({ x: cursor.x, y: cursor.y });
@@ -173,7 +179,7 @@ export default function Terminal(props: { className?: string }) {
     //   * finishing the current active selection
     //   * clicking inside a selection to start a drag
     //   * inputting a character
-    if (event.button == MouseButton.Left) {
+    if (button == MouseButton.Left) {
       if (selectionStartPoint) {
         // going to be ending this selection, store the selection &
         // then delete the in-progress one
@@ -193,12 +199,7 @@ export default function Terminal(props: { className?: string }) {
           if (Matrices.AABB(s, c)) {
             // starting a drag, take a slice of the area we're going to be shifting around
             // so it can be visualised on top of the existing matrix squares
-            const slice = Matrices.slice(matrix, {
-              x: s.x,
-              y: s.y,
-              w: s.x + s.w,
-              h: s.y + s.h
-            });
+            const slice = Matrices.slice(matrix, s);
 
             // at-least one square needs to have something in it
             if (slice.flat().every(v => v == null)) return endSelection();
@@ -219,7 +220,6 @@ export default function Terminal(props: { className?: string }) {
 
           // is the translation vector of the drag
           const { x: dx, y: dy } = delta(start, end);
-          // const { x: ox, y: oy } = delta();
 
           // new position vector of the selected region
           const [nx, ny] = [storeSelection.x + dx, storeSelection.y + dy];
@@ -228,7 +228,7 @@ export default function Terminal(props: { className?: string }) {
           setMatrix(
             // insert sub-matrix into matrix
             Matrices.insert(
-              // remove selected area from matrix
+              // remove the now dragged area from matrix
               Matrices.remove(matrix, storeSelection),
               activeDragMatrixSlice,
               { x: nx, y: ny }
@@ -340,7 +340,7 @@ export default function Terminal(props: { className?: string }) {
             'p-4 rounded-md shadow',
             css({ backgroundColor: terminalBackgroundColor })
           )}
-          onMouseDown={handleMouseDown}
+          onMouseDown={event => handleMouseDown(event.button)}
         >
           {/* this div has no padding, so no need to do any offset calculations to find grid square
               all matrix squares are positioned relative to this container, offsetted by
@@ -462,6 +462,15 @@ export default function Terminal(props: { className?: string }) {
             <Squares matrix={matrix}></Squares>
           </div>
         </div>
+
+        {width && height && (
+          <MatrixCanvas
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onKeyDown={handleKeyDown}
+            characterDimensions={{ w: width, h: height }}
+          ></MatrixCanvas>
+        )}
       </div>
     </div>
   );

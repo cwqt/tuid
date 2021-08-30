@@ -70,8 +70,9 @@ export interface ExportedState {
   };
 }
 
-export type Area = { x: number; y: number; w: number; h: number };
 export type Coordinates = { x: number; y: number };
+export type Dimensions = { w: number; h: number };
+export type Area = Coordinates & Dimensions;
 
 export enum MouseButton {
   Left = 0,
