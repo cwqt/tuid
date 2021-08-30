@@ -65,7 +65,7 @@ export default function SettingsSidebar() {
   ) => {
     if (event.target.files[0]) {
       const json = await event.target.files[0].text();
-      importState(json);
+      importState(JSON.parse(json));
     }
   };
 

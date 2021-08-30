@@ -38,21 +38,17 @@ import { useStore } from '../common/store';
 import Matrices from '../components/matrix/methods';
 import Sidebar from '../components/sidebar';
 
+import README from '../README.tui';
+
 const TerminalNoSSR = dynamic(() => import('../components/matrix'), {
   ssr: false
 });
 
 export default function Home() {
-  const { matrix, setMatrix, setMatrixSquareProperty } = useStore();
+  const { matrix, importState } = useStore();
 
   useEffect(() => {
-    setMatrix(Matrices.create(98, 60));
-
-    'hello world'
-      .split('')
-      .forEach((c, idx) =>
-        setMatrixSquareProperty(idx + 1, 1, { character: c })
-      );
+    importState(README);
   }, []);
 
   return (

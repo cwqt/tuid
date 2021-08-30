@@ -44,7 +44,7 @@ export interface IStore {
 
   // import & export
   exportState: () => void;
-  importState: (json: string) => void;
+  importState: (exportedState: ExportedState) => void;
 }
 
 export const useStore = create<IStore>(set => ({
@@ -114,10 +114,8 @@ export const useStore = create<IStore>(set => ({
       return state;
     }),
 
-  importState: file =>
+  importState: exportedState =>
     set(state => {
-      const exportedState: ExportedState = JSON.parse(file);
-      console.log(exportedState);
       if (!exportedState.matrix) {
         throw new Error(`Invalid exported state file`);
       }

@@ -161,7 +161,7 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
     <div
       onContextMenu={e => e.preventDefault()}
       className={cx(
-        'p-4 rounded-md shadow',
+        'p-2 rounded-md shadow',
         css({ backgroundColor: terminalBackgroundColor })
       )}
     >
