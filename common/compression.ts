@@ -1,8 +1,6 @@
 import { nanoid } from 'nanoid';
-import color from './color';
 import {
   ExportedState,
-  ICompressedMatrix,
   ICompressedMatrixSquare,
   IMatrixSquare,
   TerminalMatrix

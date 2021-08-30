@@ -1,13 +1,10 @@
 import { Button, Checkbox, Heading } from '@chakra-ui/react';
 import { css, cx } from '@emotion/css';
 import color from 'common/color';
-import specialCharacters from 'common/special-characters';
+import specialCharacters from 'common/characters';
 import { useStore } from 'common/store';
 import { useEffect } from 'react';
 import { useState } from 'react';
-
-export const thisIsAnUnusedExport =
-  'this export only exists to disable fast refresh for this file';
 
 export default function InputSidebar(props: { className?: string }) {
   const {

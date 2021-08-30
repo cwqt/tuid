@@ -2,6 +2,7 @@ const stringify = require('color-stringify');
 const space = require('color-space');
 const parse = require('color-parse');
 
+// https://en.wikipedia.org/wiki/CIELUV
 type Luv = { l: number; u: number; v: number };
 
 const toLuv = (arr: [number, number, number]): Luv => ({

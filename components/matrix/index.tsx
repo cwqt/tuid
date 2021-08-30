@@ -9,13 +9,12 @@ import {
   IMatrixSquare,
   MouseButton
 } from 'common/interfaces';
-import React, { MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
 import { applyStyle, useStore } from '../../common/store';
 import { MatrixCanvas } from './canvas';
 import Matrices from './methods';
 import { MatrixSquare } from './square';
-import { MatrixSquares } from './squares';
 
 export default function Terminal(props: { className?: string }) {
   const {
@@ -300,8 +299,6 @@ export default function Terminal(props: { className?: string }) {
     setActiveDrag(undefined);
   };
 
-  const Squares = MatrixSquares(width, height);
-
   return (
     <div>
       <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
@@ -321,154 +318,30 @@ export default function Terminal(props: { className?: string }) {
         {storeSelection?.w},{storeSelection?.h}
       </p>
 
+      {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
+      <MatrixSquare
+        ref={hiddenSquareRef}
+        className="opacity-0 absolute"
+        {...hiddenSquareProps}
+      ></MatrixSquare>
+
       <div
         className={classnames(
           props.className,
           'flex flex-col m-4 ml-0 relative'
         )}
       >
-        {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
-        <MatrixSquare
-          ref={hiddenSquareRef}
-          className="opacity-0 absolute"
-          {...hiddenSquareProps}
-        ></MatrixSquare>
-
-        <div
-          id="terminal"
-          className={cx(
-            'p-4 rounded-md shadow',
-            css({ backgroundColor: terminalBackgroundColor })
-          )}
-          onMouseDown={event => handleMouseDown(event.button)}
-        >
-          {/* this div has no padding, so no need to do any offset calculations to find grid square
-              all matrix squares are positioned relative to this container, offsetted by
-              their x * width & y * height */}
-          <div
-            ref={mouseRef}
-            onContextMenu={e => e.preventDefault()}
-            className={cx(
-              'relative border border-gray-600',
-              css({
-                width: `${matrix[0].length * width}px`,
-                height: `${matrix.length * height}px`
-              })
-            )}
-          >
-            {/* for selection mode, outline progressing selection area */}
-            {activeSelection && selectionStartPoint && (
-              <div
-                className={cx(
-                  'absolute border border-gray-100 z-10',
-                  css({
-                    left: `${activeSelection.x * width}px`,
-                    top: `${activeSelection.y * height}px`,
-                    width: `${activeSelection.w * width}px`,
-                    height: `${activeSelection.h * height}px`
-                  })
-                )}
-              ></div>
-            )}
-
-            {/* if an area is currently selected (in the store), show that & handle dragging motion */}
-            <>
-              {/* highlight the currently selected area in a white-dotted outline */}
-              {storeSelection && (
-                <div
-                  className={cx(
-                    'absolute border border-dashed z-10 cursor-move',
-                    'border-gray-100',
-                    css({
-                      left: `${storeSelection.x * width}px`,
-                      top: `${storeSelection.y * height}px`,
-                      width: `${storeSelection.w * width}px`,
-                      height: `${storeSelection.h * height}px`
-                    })
-                  )}
-                ></div>
-              )}
-
-              {/* highlight the currently dragged area in a pink-dotted outline */}
-              {activeDrag && (
-                <div
-                  className={cx(
-                    'absolute border border-dashed z-10 cursor-move',
-                    // highlight if currently in a dragging action
-                    'border-pink-500',
-                    css({
-                      left: `${
-                        (delta(activeDrag?.start, activeDrag?.end).x +
-                          storeSelection.x) *
-                        width
-                      }px`,
-                      top: `${
-                        (delta(activeDrag?.start, activeDrag?.end).y +
-                          storeSelection.y) *
-                        height
-                      }px`,
-                      width: `${storeSelection.w * width}px`,
-                      height: `${storeSelection.h * height}px`,
-                      backgroundColor: terminalBackgroundColor
-                    })
-                  )}
-                ></div>
-              )}
-
-              {/* drag around preview */}
-              {activeDragMatrixSlice && (
-                <Squares
-                  // this matrix is a slice of the terminal matrix, so all indexes are starting from 0,0
-                  // so we need some additional offsetting to the start point of the stored selection
-                  // alongside the active drag offset so that they are in the same position as the
-                  // thing we just selected
-                  zIndex={10}
-                  matrix={activeDragMatrixSlice}
-                  offset={delta(activeDrag.start, {
-                    x: activeDrag.end.x + storeSelection.x,
-                    y: activeDrag.end.y + storeSelection.y
-                  })}
-                ></Squares>
-              )}
-            </>
-
-            {/* for input mode, show a cursor MatrixSquare with all the styles currently 
-                don't show cursor character outside the border of the dimensions */}
-            {!storeSelection &&
-              cursor &&
-              0 <= cursor.x &&
-              cursor.x < matrix[0].length &&
-              0 <= cursor.y &&
-              cursor.y < matrix.length && (
-                <MatrixSquare
-                  className={cx(
-                    'absolute z-10',
-                    css({
-                      left: `${cursor.x * width}px`,
-                      top: `${cursor.y * height}px`,
-                      backgroundColor: editor.background
-                    })
-                  )}
-                  {...cursorStyle}
-                  character={
-                    selectedSpecialCharacter ||
-                    matrix[cursor.y][cursor.x]?.character ||
-                    cursorStyle.character
-                  }
-                  isBordered={true}
-                ></MatrixSquare>
-              )}
-
-            <Squares matrix={matrix}></Squares>
-          </div>
-        </div>
-
         {width && height && (
           <MatrixCanvas
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onKeyDown={handleKeyDown}
             characterDimensions={{ w: width, h: height }}
+            selection={storeSelection}
+            activeSelection={activeSelection}
+            drag={activeDrag}
+            dragSlice={activeDragMatrixSlice}
+            cursor={cursor}
           ></MatrixCanvas>
         )}
       </div>

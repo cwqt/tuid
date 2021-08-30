@@ -1,6 +1,7 @@
 import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from './interfaces';
 import FileSaver from 'file-saver';
 import create from 'zustand';
+import update from 'immutability-helper';
 import compression from './compression';
 import {
   createMatrixSquare,
@@ -74,21 +75,27 @@ export const useStore = create<IStore>(set => ({
       matrix
     })),
   setMatrixSquareProperty: (x, y, data) =>
-    set(state => {
-      // for null values we're removing the grid square from the matrix
-      state.matrix[y][x] = data
-        ? // data exists, check if square exists for overwrite or create
-          state.matrix[y][x]
-          ? // overwrite
-            {
-              ...applyStyle(state.editor, state.matrix[y][x]),
-              ...data // explicit over-write
-            }
-          : // no square, create new at this point
-            applyStyle(state.editor, createMatrixSquare(data))
-        : null;
-      return state;
-    }),
+    set(state => ({
+      // immutably update 2d array
+      matrix: update(state.matrix, {
+        [y]: {
+          [x]: {
+            $set: data
+              ? // input data exists, check if square exists for overwrite or create
+                state.matrix[y][x]
+                ? // overwrite
+                  {
+                    ...applyStyle(state.editor, state.matrix[y][x]),
+                    ...data // explicit over-write
+                  }
+                : // no square, create new at this point
+                  applyStyle(state.editor, createMatrixSquare(data))
+              : // for no data we're removing the grid square from the matrix
+                null
+          }
+        }
+      })
+    })),
 
   editor: {
     bold: false,

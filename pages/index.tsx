@@ -15,7 +15,7 @@
  *       [ ] apply style across selected region
  *
  * canvas
- *   [ ] convert terminal to using html5 canvas for performance
+ *   [x] convert terminal to using html5 canvas for performance
  *  */
 
 import dynamic from 'next/dynamic';
