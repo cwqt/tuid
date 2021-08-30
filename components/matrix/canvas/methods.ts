@@ -1,3 +1,4 @@
+import { Borders } from 'common/characters';
 import { Coordinates, Dimensions, IMatrixSquare } from 'common/interfaces';
 
 const makeFont = (
@@ -16,13 +17,24 @@ const makeFont = (
   return font;
 };
 
+const borders = Object.values(Borders)
+  .map(b => b.flat())
+  .flat()
+  .filter((b, idx, arr) => arr.indexOf(b) == idx && b !== ' ');
+
 export const drawSquare = (
   { x, y }: Coordinates,
   { w, h }: Dimensions,
   square: IMatrixSquare,
   ctx: CanvasRenderingContext2D
 ) => {
-  ctx.font = makeFont('Roboto Mono', 13, square.bold, square.italic);
+  ctx.font = makeFont(
+    'Roboto Mono',
+    // use a larger font when rendering border characters to remove space in between them
+    borders.includes(square.character) ? 16 : 13,
+    square.bold,
+    square.italic
+  );
 
   if (square.background) {
     ctx.fillStyle = square.background;
