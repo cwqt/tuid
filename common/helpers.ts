@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Coordinates } from './interfaces';
-import { createMatrixSquare, IMatrixSquare } from './interfaces';
+import { IMatrixSquare } from './interfaces';
+import Matrices from '../components/matrix/methods';
 
 export function useKeyPress(): { key: string } {
   const [keyPressed, setKeyPressed] = useState<{ key: string }>({
@@ -44,7 +45,7 @@ export const delta = (
 });
 
 export const randomMatrixSquare = (): IMatrixSquare =>
-  createMatrixSquare({
+  Matrices.squares.create({
     character: (x => x.split('')[Math.floor(Math.random() * x.length - 1)])(
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     ),

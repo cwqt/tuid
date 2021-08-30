@@ -33,8 +33,7 @@ export default function Home() {
   const { matrix, setMatrix, setMatrixSquareProperty } = useStore();
 
   useEffect(() => {
-    // setMatrix(98, 59);
-    setMatrix(Matrices.create(40, 20));
+    setMatrix(Matrices.create(98, 60));
 
     'hello world'
       .split('')
