@@ -1,28 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { Coordinates } from './interfaces';
-import { IMatrixSquare } from './interfaces';
+import { useEffect, useRef } from 'react';
 import Matrices from '../components/matrix/methods';
-
-export function useKeyPress(): { key: string } {
-  const [keyPressed, setKeyPressed] = useState<{ key: string }>({
-    key: undefined
-  });
-
-  function downHandler({ key }): void {
-    setKeyPressed({ key });
-  }
-
-  // Add event listeners
-  useEffect(() => {
-    window.addEventListener('keydown', downHandler);
-    // Remove event listeners on cleanup
-    return () => {
-      window.removeEventListener('keydown', downHandler);
-    };
-  }, []); // Empty array ensures that effect is only run on mount and unmount
-
-  return keyPressed;
-}
+import { Coordinates, IMatrixSquare } from './interfaces';
 
 export const usePrevious = <T>(value: T) => {
   const ref = useRef<T>();

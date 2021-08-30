@@ -1,14 +1,12 @@
-import { css, cx } from '@emotion/css';
-import useMouse from '@react-hook/mouse-position';
 import classnames from 'classnames';
-import { clamp, delta, useKeyPress, usePrevious } from 'common/helpers';
+import { clamp, delta } from 'common/helpers';
 import {
   Area,
   Coordinates,
   IMatrixSquare,
   MouseButton
 } from 'common/interfaces';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
 import { useStore } from '../../common/store';
 import { MatrixCanvas } from './canvas';
@@ -20,136 +18,26 @@ export default function Terminal(props: { className?: string }) {
     matrix,
     setMatrix,
     setMatrixSquareProperty,
-    selectedSpecialCharacter,
-    terminalBackgroundColor,
-    editor,
     selection: storeSelection,
     setSelection: setStoreSelection
   } = useStore();
+
+  // current grid position of the mouse cursor over the terminal
   const [cursor, setCursor] = useState<Coordinates | undefined>();
-  const [cursorStyle, setCursorStyle] = useState(
-    Matrices.squares.style(editor, Matrices.squares.create())
-  );
 
-  // match cursor style to that of the currently hovered character, but with
-  // current editor styles applied, to preview what it'd look like
-  useEffect(() => {
-    setCursorStyle(
-      Matrices.squares.style(
-        editor,
-        Matrices.squares.create({ character: selectedSpecialCharacter || ' ' })
-      )
-    );
-  }, [editor, selectedSpecialCharacter]);
-
-  // 30x100 grid is 3,000 nodes - having event listeners on every one to check if
-  // hovered is slow as dog, instead use mouse position and some maths to figure out
-  // which grid square the mouse is lies over
-  const mouseRef = useRef(null);
-  const mouse = useMouse(mouseRef, {
-    leaveDelay: 0,
-    enterDelay: 0,
-    fps: 60
-  });
-  // store previous value to compare against to resolve bug with cursor
-  // moving back and forth, read below
-  const previousMouse = usePrevious(mouse);
-
-  // We need to know the width & height of one of these MatrixSquares
-  // since they use ch/rems for dimensions, which we'll need in px to
-  // find x,y position of square in the grid
+  // We need to know the width & height of one of these MatrixSquares since they use ch/rems for
+  // dimensions, which we'll need in px to find x,y position of square in the grid
   const hiddenSquareProps = Matrices.squares.create({ character: 'X' });
   const [hiddenSquareRef, { width, height }] = useDimensions();
 
-  const handleMouseMove = (mouse: Coordinates) => {
-    if (width && height && mouse?.x && mouse?.y && matrix) {
-      // weird bug where typing will cause cursor to switch back and forth
-      // even though the mouse position hasn't actually move - i suspect this
-      // has something to do with the actual mouse cursor itself changing
-      if (mouse.x == previousMouse?.x && mouse.y == previousMouse?.y) return;
-
-      const [x, y] = [
-        clamp(0, Math.trunc(mouse.x / width), matrix[0].length - 1),
-        clamp(0, Math.trunc(mouse.y / height), matrix.length - 1)
-      ];
-
-      setCursor({ x: x, y: y });
-    } else {
-      // set to last known position when leaving terminal bounding box
-      setCursor({ x: cursor?.x, y: cursor?.y });
-    }
-  };
-
-  useEffect(() => handleMouseMove({ x: mouse?.x, y: mouse?.y }), [mouse]);
-
-  // Listen for keyboard events - store key state in object so that subsequent presses of the
-  // same key trigger useEffect as value is pointing to a different location
-  const keyPressed = useKeyPress();
-
-  const handleKeyDown = (key: string) => {
-    if (storeSelection || !cursor) return;
-    const { x, y } = cursor;
-
-    // Only handle keypresses if the mouse is currently over this grid square
-    if (x != undefined && y != undefined) {
-      switch (key) {
-        case 'Delete': {
-          const { x: nx, y: ny } = Matrices.position.cols.advance(
-            { x, y },
-            matrix
-          );
-          setCursor({ x: nx, y: ny });
-          setMatrixSquareProperty(nx, ny, null);
-          break;
-        }
-        case 'Backspace': {
-          const { x: nx, y: ny } = Matrices.position.cols.retreat(
-            { x, y },
-            matrix
-          );
-          setCursor({ x: nx, y: ny });
-          setMatrixSquareProperty(nx, ny, null);
-          break;
-        }
-        case 'ArrowDown':
-          setCursor(Matrices.position.rows.advance({ x, y }, matrix));
-          break;
-        case 'ArrowUp':
-          setCursor(Matrices.position.rows.retreat({ x, y }, matrix));
-          break;
-        case 'ArrowLeft':
-          setCursor(Matrices.position.cols.retreat({ x, y }, matrix));
-          break;
-        case 'ArrowRight':
-          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
-          break;
-        case 'Shift':
-        case 'Meta':
-        case 'Alt':
-        case 'Control':
-        case 'Enter':
-        case 'Tab':
-        case 'CapsLock':
-        case 'Escape':
-          // ignore these
-          break;
-        default:
-          setMatrixSquareProperty(x, y, { character: key });
-          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
-      }
-    }
-  };
-
-  useEffect(() => handleKeyDown(keyPressed.key), [keyPressed]);
-
-  // holds the current in-progress selection
+  // holds the current in-progress selection initial & end point
   const [selectionStartPoint, setSelectionStartPoint] = useState<
     Coordinates | undefined
   >();
   const [activeSelection, setActiveSelection] = useState<Area | undefined>();
 
-  // holds the current state of if a drag action is taking place
-  // using a start & end we can find a delta to move all contents by at the end of a drag
+  // holds the current state of if a drag action is taking place using a start & end we can find a
+  // delta to move all contents by at the end of a drag
   const [activeDrag, setActiveDrag] = useState<
     | {
         start: Coordinates; // where in the bounding box area was clicked
@@ -157,12 +45,36 @@ export default function Terminal(props: { className?: string }) {
       }
     | undefined
   >();
+
   // sub-section of the matrix that is currently being dragged around
   const [activeDragMatrixSlice, setActiveDragMatrixSlice] = useState<
     IMatrixSquare[][] | undefined
   >();
 
-  // We'll use mouse-presses over the terminal to insert a special character into the terminal
+  // move the cursor grid position according to the mouse px position within the canvas
+  const handleMouseMove = useCallback(
+    (mouse: Coordinates) => {
+      if (width && height && mouse?.x && mouse?.y && matrix) {
+        // weird bug where typing will cause cursor to switch back and forth
+        // even though the mouse position hasn't actually move - i suspect this
+        // has something to do with the actual mouse cursor itself changing
+        // if (mouse.x == previousMouse?.x && mouse.y == previousMouse?.y) return;
+
+        const [x, y] = [
+          clamp(0, Math.trunc(mouse.x / width), matrix[0].length - 1),
+          clamp(0, Math.trunc(mouse.y / height), matrix.length - 1)
+        ];
+
+        setCursor({ x: x, y: y });
+      } else {
+        // set to last known position when leaving terminal bounding box
+        setCursor({ x: cursor?.x, y: cursor?.y });
+      }
+    },
+    [width, height]
+  );
+
+  // Handle mouse presses for selections & drags
   const handleMouseDown = (button: MouseButton) => {
     // right click starts off an active selection
     if (button == MouseButton.Right) {
@@ -236,23 +148,64 @@ export default function Terminal(props: { className?: string }) {
           endDrag();
         }
       }
-    } else {
-      // just inputting a character/styles
-      if (!cursor) return;
-      const { x, y } = cursor;
-      if (x != undefined && y != undefined) {
-        if (selectedSpecialCharacter) {
-          setMatrixSquareProperty(x, y, {
-            character: selectedSpecialCharacter
-          });
-        } else {
-          setMatrixSquareProperty(x, y, {
-            character: matrix[y][x]?.character || ' '
-          });
-        }
-      }
     }
   };
+
+  // Listen for keyboard events to insert characters into the matrix
+  const handleKeyDown = useCallback(
+    (key: string) => {
+      if (storeSelection || !cursor) return;
+      const { x, y } = cursor;
+
+      // Only handle keypresses if the mouse is currently over this grid square
+      switch (key) {
+        case 'Delete': {
+          const { x: nx, y: ny } = Matrices.position.cols.advance(
+            { x, y },
+            matrix
+          );
+          setCursor({ x: nx, y: ny });
+          setMatrixSquareProperty(nx, ny, null);
+          break;
+        }
+        case 'Backspace': {
+          const { x: nx, y: ny } = Matrices.position.cols.retreat(
+            { x, y },
+            matrix
+          );
+          setCursor({ x: nx, y: ny });
+          setMatrixSquareProperty(nx, ny, null);
+          break;
+        }
+        case 'ArrowDown':
+          setCursor(Matrices.position.rows.advance({ x, y }, matrix));
+          break;
+        case 'ArrowUp':
+          setCursor(Matrices.position.rows.retreat({ x, y }, matrix));
+          break;
+        case 'ArrowLeft':
+          setCursor(Matrices.position.cols.retreat({ x, y }, matrix));
+          break;
+        case 'ArrowRight':
+          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
+          break;
+        case 'Shift':
+        case 'Meta':
+        case 'Alt':
+        case 'Control':
+        case 'Enter':
+        case 'Tab':
+        case 'CapsLock':
+        case 'Escape':
+          // ignore these
+          break;
+        default:
+          setMatrixSquareProperty(x, y, { character: key });
+          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
+      }
+    },
+    [matrix, cursor, storeSelection]
+  );
 
   // listen for mouse movements to expand the current in-progress selection area
   useEffect(() => {
@@ -286,22 +239,28 @@ export default function Terminal(props: { className?: string }) {
     }
   }, [cursor]);
 
-  const endSelection = () => {
+  const endSelection = useCallback(() => {
     setStoreSelection(undefined);
     setSelectionStartPoint(undefined);
     setActiveSelection(undefined);
-  };
+  }, []);
 
-  const endDrag = () => {
+  const endDrag = useCallback(() => {
     setStoreSelection(undefined);
     setActiveDragMatrixSlice(undefined);
     setActiveDrag(undefined);
-  };
+  }, []);
 
   return (
     <div>
-      {/* debugging utility stuff */}
-      {/* <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
+      {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
+      <MatrixSquare
+        ref={hiddenSquareRef}
+        className="opacity-0 absolute"
+        {...hiddenSquareProps}
+      ></MatrixSquare>
+
+      <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
         cursor: {cursor?.x},{cursor?.y}
         <br />
         selection start: {selectionStartPoint?.x},{selectionStartPoint?.y}
@@ -316,14 +275,7 @@ export default function Terminal(props: { className?: string }) {
         <br />
         stored selection: {storeSelection?.x},{storeSelection?.y},
         {storeSelection?.w},{storeSelection?.h}
-      </p> */}
-
-      {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
-      <MatrixSquare
-        ref={hiddenSquareRef}
-        className="opacity-0 absolute"
-        {...hiddenSquareProps}
-      ></MatrixSquare>
+      </p>
 
       <div
         className={classnames(

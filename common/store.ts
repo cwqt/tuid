@@ -35,9 +35,6 @@ export interface IStore {
   editor: IEditorOptions;
   setEditorProperties: (editor: Partial<IEditorOptions>) => void;
 
-  selectedSpecialCharacter: string;
-  setSelectedSpecialCharacter: (value: string) => void;
-
   terminalBackgroundColor: string;
   setTerminalBackgroundColor: (hex: string) => void;
 
@@ -86,14 +83,6 @@ export const useStore = create<IStore>(set => ({
         ...state.editor,
         ...editor
       }
-    })),
-
-  selectedSpecialCharacter: '',
-  setSelectedSpecialCharacter: value =>
-    set(state => ({
-      selectedSpecialCharacter:
-        // un-select if selecting currently selected
-        value == state.selectedSpecialCharacter ? undefined : value
     })),
 
   terminalBackgroundColor: DEFAULT_TERMINAL_BACKGROUND_COLOR,

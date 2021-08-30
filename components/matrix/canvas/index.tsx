@@ -18,9 +18,10 @@ import { createHiDPICanvas, getCanvasCoordinates } from './helpers';
 import { drawSquare } from './methods';
 
 export interface MatrixCanvasProps {
-  onMouseDown: (button: MouseButton) => void;
-  onMouseMove: (coords: Coordinates) => void;
-  onKeyDown: (key: string) => void;
+  onMouseDown?: (button: MouseButton) => void;
+  onMouseMove?: (coords: Coordinates) => void;
+  onKeyDown?: (key: string) => void;
+  onKeyUp?: (key: string) => void;
 
   // dynamically changing data
   cursor: Coordinates;
@@ -128,21 +129,25 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
     }
 
     // draw the mouse cursor last for z-indexing above all
-    ctx.strokeStyle = '#fff';
-    ctx.setLineDash([]);
-    ctx.strokeRect(cursor.x * w, cursor.y * h, w, h);
+    if (props.cursor) {
+      ctx.strokeStyle = '#fff';
+      ctx.setLineDash([]);
+      ctx.strokeRect(cursor.x * w, cursor.y * h, w, h);
+    }
   };
 
   const handleMouseMove: MouseEventHandler = event =>
-    props.onMouseMove(getCanvasCoordinates(canvasRef.current, event));
+    props.onMouseMove?.(getCanvasCoordinates(canvasRef.current, event));
 
   const handleMouseDown: MouseEventHandler = event =>
-    props.onMouseDown(event.button);
+    props.onMouseDown?.(event.button);
 
   const handleKeyDown: KeyboardEventHandler = event =>
-    props.onKeyDown(event.key);
+    props.onKeyDown?.(event.key);
 
-  // on initial load, create the canvas
+  const handleKeyUp: KeyboardEventHandler = event => props.onKeyUp?.(event.key);
+
+  // on initial load or dimensions change, create the canvas
   useEffect(create, []);
 
   // trigger a re-render whenever any of these values change
@@ -163,7 +168,9 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
         ref={canvasRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
+        tabIndex={1}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         onContextMenu={e => e.preventDefault()}
       />
     </div>

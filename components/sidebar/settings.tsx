@@ -1,27 +1,25 @@
+import { ArrowDownIcon, ArrowUpIcon, RepeatIcon } from '@chakra-ui/icons';
 import {
+  Button,
   FormControl,
   FormLabel,
+  Heading,
+  IconButton,
+  Input,
+  InputGroup,
+  InputLeftAddon,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,
   NumberInputField,
-  NumberInputStepper,
-  Input,
-  InputGroup,
-  InputLeftAddon,
-  Button,
-  Heading
+  NumberInputStepper
 } from '@chakra-ui/react';
 import { DEFAULT_TERMINAL_BACKGROUND_COLOR } from 'common/interfaces';
 import { useStore } from 'common/store';
-import React, { ChangeEvent, useRef } from 'react';
-import { useEffect } from 'react';
-import { useState } from 'react';
-import { ArrowDownIcon, ArrowUpIcon, RepeatIcon } from '@chakra-ui/icons';
-import { IconButton } from '@chakra-ui/react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Matrices from '../matrix/methods';
 
-export default function SettingsSidebar(props: { className?: string }) {
+export default function SettingsSidebar() {
   const {
     matrix,
     setMatrix,
