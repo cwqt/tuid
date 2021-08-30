@@ -214,7 +214,7 @@ export default function Terminal(props: { className?: string }) {
       // c: current point, s: initial point
       const [c, s] = [{ ...cursor }, { ...selectionStartPoint }];
 
-      let [w, h] = [Math.abs(c.x - s.x), Math.abs(c.y - s.y)];
+      let [w, h] = [Math.abs(c.x - s.x) + 1, Math.abs(c.y - s.y) + 1];
       let [x, y] = [s.x, s.y];
 
       if (c.y < s.y) {
