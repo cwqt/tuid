@@ -11,7 +11,7 @@ export interface IMatrixSquare {
   __id: string;
 }
 
-export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#1f2937' as const;
+export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#181818' as const;
 
 // x ---->     y
 // [[],[],[]]  |

@@ -53,19 +53,20 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
     const { w, h } = props.characterDimensions;
     const ctx = contextRef.current;
 
-    const squares = (offset: Coordinates, matrix: TerminalMatrix) =>
-      matrix.forEach((row, y) =>
-        row.forEach(
-          (square, x) =>
-            square &&
+    const squares = (offset: Coordinates, matrix: TerminalMatrix) => {
+      // iterate backwards to prevent clipping
+      for (let y = matrix.length - 1; y >= 0; y--) {
+        for (let x = matrix[y].length - 1; x >= 0; x--) {
+          matrix[y][x] &&
             drawSquare(
               { x: x + offset.x, y: y + offset.y },
               props.characterDimensions,
-              square,
+              matrix[y][x],
               ctx
-            )
-        )
-      );
+            );
+        }
+      }
+    };
 
     // draw the background colour
     ctx.fillStyle = terminalBackgroundColor;

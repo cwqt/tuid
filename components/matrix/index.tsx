@@ -25,10 +25,9 @@ export default function Terminal(props: { className?: string }) {
   // current grid position of the mouse cursor over the terminal
   const [cursor, setCursor] = useState<Coordinates | undefined>();
 
-  // We need to know the width & height of one of these MatrixSquares since they use ch/rems for
-  // dimensions, which we'll need in px to find x,y position of square in the grid
-  const hiddenSquareProps = Matrices.squares.create({ character: 'X' });
-  const [hiddenSquareRef, { width, height }] = useDimensions();
+  // Very scientific method of guessing optimal character width for display
+  const width = 8;
+  const height = 16;
 
   // holds the current in-progress selection initial & end point
   const [selectionStartPoint, setSelectionStartPoint] = useState<
@@ -207,7 +206,7 @@ export default function Terminal(props: { className?: string }) {
     [matrix, cursor, storeSelection]
   );
 
-  // listen for mouse movements to expand the current in-progress selection area
+  // listen for cursor position changes to expand the current in-progress selection area
   useEffect(() => {
     // update active selection to fill region between start & current cursor when it moves
     if (selectionStartPoint && activeSelection) {
@@ -253,14 +252,7 @@ export default function Terminal(props: { className?: string }) {
 
   return (
     <div>
-      {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
-      <MatrixSquare
-        ref={hiddenSquareRef}
-        className="opacity-0 absolute"
-        {...hiddenSquareProps}
-      ></MatrixSquare>
-
-      <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
+      {/* <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
         cursor: {cursor?.x},{cursor?.y}
         <br />
         selection start: {selectionStartPoint?.x},{selectionStartPoint?.y}
@@ -275,7 +267,7 @@ export default function Terminal(props: { className?: string }) {
         <br />
         stored selection: {storeSelection?.x},{storeSelection?.y},
         {storeSelection?.w},{storeSelection?.h}
-      </p>
+      </p> */}
 
       <div
         className={classnames(

@@ -22,16 +22,22 @@ export const drawSquare = (
   square: IMatrixSquare,
   ctx: CanvasRenderingContext2D
 ) => {
-  ctx.font = makeFont('Roboto Mono', 14, square.bold, square.italic);
+  ctx.font = makeFont('Roboto Mono', 13, square.bold, square.italic);
 
   if (square.background) {
     ctx.fillStyle = square.background;
-    ctx.fillRect(x * w, y * h, w, h);
+    ctx.fillRect((x + 0.1) * w, y * h, w + 0.17, h);
   }
 
   if (square.character) {
     ctx.fillStyle = square.foreground;
-    ctx.fillText(square.character, x * w, (y + 1) * h);
+
+    ctx.fillText(
+      square.character,
+      // center the character within it's box
+      x * w + (w / 2 - ctx.measureText(square.character).width / 2),
+      (y + 0.75) * h
+    );
   }
 
   if (square.underline) {
@@ -43,6 +49,6 @@ export const drawSquare = (
   if (square.strikeout) {
     // place a line half way through the square
     ctx.fillStyle = square.foreground;
-    ctx.fillRect(x * w, (y + 0.6) * h, w, 1);
+    ctx.fillRect(x * w, (y + 0.4) * h, w, 1);
   }
 };

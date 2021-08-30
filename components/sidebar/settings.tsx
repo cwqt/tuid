@@ -1,4 +1,9 @@
-import { ArrowDownIcon, ArrowUpIcon, RepeatIcon } from '@chakra-ui/icons';
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  RepeatIcon,
+  WarningIcon
+} from '@chakra-ui/icons';
 import {
   Button,
   FormControl,
@@ -63,6 +68,9 @@ export default function SettingsSidebar() {
       importState(json);
     }
   };
+
+  const clearTerminal = () =>
+    setMatrix(Matrices.create(matrix[0].length, matrix.length));
 
   return (
     <div>
@@ -182,6 +190,19 @@ export default function SettingsSidebar() {
           className="hidden"
         />
       </div>
+
+      <Heading as="h2" size="md" className="my-4">
+        Danger zone
+      </Heading>
+
+      <Button
+        leftIcon={<WarningIcon />}
+        isFullWidth
+        colorScheme="red"
+        onClick={clearTerminal}
+      >
+        Clear terminal
+      </Button>
     </div>
   );
 }
