@@ -13,19 +13,6 @@ export interface IMatrixSquare {
 
 export const DEFAULT_TERMINAL_BACKGROUND_COLOR = '#1f2937' as const;
 
-export const createMatrixSquare = (
-  square: Partial<Omit<IMatrixSquare, '__id'>> = {}
-): IMatrixSquare => ({
-  __id: nanoid(),
-  character: square.character ?? ' ',
-  foreground: square.foreground || '#fff',
-  background: square.background || 'transparent',
-  underline: square.underline ?? false,
-  strikeout: square.strikeout ?? false,
-  bold: square.bold ?? false,
-  italic: square.italic ?? false
-});
-
 // x ---->     y
 // [[],[],[]]  |
 // [[],[],[]]  |

@@ -1,18 +1,20 @@
 import { Button, Checkbox, Heading } from '@chakra-ui/react';
 import { css, cx } from '@emotion/css';
 import color from 'common/color';
-import specialCharacters from 'common/characters';
+import { Borders } from 'common/characters';
 import { useStore } from 'common/store';
 import { useEffect } from 'react';
 import { useState } from 'react';
+import Matrices from '../matrix/methods';
 
 export default function InputSidebar(props: { className?: string }) {
   const {
     editor,
     setEditorProperties,
-    selectedSpecialCharacter,
-    setSelectedSpecialCharacter,
-    terminalBackgroundColor
+    selection,
+    terminalBackgroundColor,
+    setMatrix,
+    matrix
   } = useStore();
 
   // create a 14 x 9 grid of all colors, inc. a special row for black to white
@@ -34,6 +36,34 @@ export default function InputSidebar(props: { className?: string }) {
   }, [terminalBackgroundColor]);
 
   const [depth, setDepth] = useState<'background' | 'foreground'>('foreground');
+
+  const applyBorder = (type: keyof typeof Borders) => {
+    const border = Borders[type];
+    const s = selection;
+
+    // mutable slice of matrix
+    const slice = Matrices.slice(matrix, selection);
+
+    // convenience
+    const set = (x: number, y: number, character: string) =>
+      (slice[y][x] = Matrices.squares.set(x, y, { character }, slice, editor));
+
+    // top border
+    for (let x = 0; x < s.w; x++) set(x, 0, border[0][1]);
+    // right border
+    for (let y = 0; y < s.h; y++) set(s.w - 1, y, border[1][2]);
+    // bottom border
+    for (let x = 0; x < s.w; x++) set(x, s.h - 1, border[2][1]);
+    // left border
+    for (let y = 0; y < s.h; y++) set(0, y, border[1][0]);
+
+    set(0, 0, border[0][0]); // top-left corner
+    set(s.w - 1, 0, border[0][2]); // top-right corner
+    set(0, s.h - 1, border[2][0]); // bottom-left corner
+    set(s.w - 1, s.h - 1, border[2][2]); // bottom-right corner
+
+    setMatrix(Matrices.insert(matrix, slice, selection));
+  };
 
   return (
     <div>
@@ -138,12 +168,47 @@ export default function InputSidebar(props: { className?: string }) {
         </Checkbox>
       </div>
 
-      <Heading as="h2" size="md" className="my-4">
-        Special Characters
+      <Heading as="h2" size="md" className="mt-4">
+        Borders
       </Heading>
+      <p className="my-2">Apply a border to the current selection</p>
+      <div className="flex space-x-2">
+        <Button
+          variant="outline"
+          disabled={selection == undefined}
+          colorScheme="purple"
+          onClick={() => applyBorder('square')}
+        >
+          Square
+        </Button>
+        <Button
+          variant="outline"
+          disabled={selection == undefined}
+          colorScheme="purple"
+          onClick={() => applyBorder('round')}
+        >
+          Round
+        </Button>
+        <Button
+          variant="outline"
+          disabled={selection == undefined}
+          colorScheme="purple"
+          onClick={() => applyBorder('thick')}
+        >
+          Thick
+        </Button>
+        <Button
+          variant="outline"
+          disabled={selection == undefined}
+          colorScheme="purple"
+          onClick={() => applyBorder('double')}
+        >
+          Double
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-2 gap-y-4">
-        {Object.entries(specialCharacters).map(([key, value]) => {
+      {/* <div className="grid grid-cols-2 gap-y-4">
+        {Object.entries(Borders).map(([key, value]) => {
           return (
             <div key={key}>
               <Heading as="h3" size="md" className="mb-2 text-center">
@@ -176,7 +241,7 @@ export default function InputSidebar(props: { className?: string }) {
             </div>
           );
         })}
-      </div>
+      </div> */}
     </div>
   );
 }

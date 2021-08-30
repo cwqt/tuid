@@ -1,10 +1,11 @@
-import { Button } from '@chakra-ui/react';
+import { Button, Heading } from '@chakra-ui/react';
 import { css, cx } from '@emotion/css';
-import { createMatrixSquare } from 'common/interfaces';
 import { useStore } from 'common/store';
+import React from 'react';
 import Matrices from '../matrix/methods';
+import { Borders } from '../../common/characters';
 
-export default function SelectSidebar(props: { className?: string }) {
+export default function SelectSidebar() {
   const { selection, editor, matrix, setMatrix } = useStore();
 
   const clearSelectedArea = () => {
@@ -25,7 +26,7 @@ export default function SelectSidebar(props: { className?: string }) {
           row.map(square =>
             square
               ? { ...square, background: editor.background }
-              : createMatrixSquare({
+              : Matrices.squares.create({
                   background: editor.background,
                   character: ' '
                 })
@@ -37,7 +38,7 @@ export default function SelectSidebar(props: { className?: string }) {
   };
 
   return (
-    <div>
+    <>
       <div className="flex">
         <Button
           colorScheme="purple"
@@ -72,6 +73,6 @@ export default function SelectSidebar(props: { className?: string }) {
           Clear selected area
         </Button>
       </div>
-    </div>
+    </>
   );
 }

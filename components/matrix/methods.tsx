@@ -1,4 +1,11 @@
-import { Area, Coordinates, IMatrixSquare } from 'common/interfaces';
+import {
+  Area,
+  Coordinates,
+  IEditorOptions,
+  IMatrixSquare,
+  TerminalMatrix
+} from 'common/interfaces';
+import { nanoid } from 'nanoid';
 
 const create = (
   width: number,
@@ -160,12 +167,64 @@ const insert = (
     h: subMatrix.length - 1
   });
 
+const createMatrixSquare = (
+  square: Partial<Omit<IMatrixSquare, '__id'>> = {}
+): IMatrixSquare => ({
+  __id: nanoid(),
+  character: square.character ?? ' ',
+  foreground: square.foreground || '#fff',
+  background: square.background || 'transparent',
+  underline: square.underline ?? false,
+  strikeout: square.strikeout ?? false,
+  bold: square.bold ?? false,
+  italic: square.italic ?? false
+});
+
+export const applyMatrixSquareStyle = (
+  editor: IEditorOptions,
+  square: IMatrixSquare
+): IMatrixSquare => ({
+  __id: square.__id,
+  character: square.character,
+  foreground: editor.foreground,
+  background: editor.background,
+  underline: editor.underline,
+  strikeout: editor.strikeout,
+  bold: editor.bold,
+  italic: editor.italic
+});
+
+const setMatrixSquare = (
+  x: number,
+  y: number,
+  data: Partial<IMatrixSquare> | null,
+  matrix: TerminalMatrix,
+  editor?: IEditorOptions
+) =>
+  data
+    ? // input data exists, check if square exists for overwrite or create
+      matrix[y][x]
+      ? // overwrite
+        {
+          ...applyMatrixSquareStyle(editor, matrix[y][x]),
+          ...data // explicit over-write
+        }
+      : // no square, create new at this point
+        applyMatrixSquareStyle(editor, createMatrixSquare(data))
+    : // for no data we're removing the grid square from the matrix
+      null;
+
 export default {
   create,
   AABB,
   slice,
   insert,
   remove,
+  squares: {
+    create: createMatrixSquare,
+    style: applyMatrixSquareStyle,
+    set: setMatrixSquare
+  },
   position: {
     rows: {
       advance: advanceRow,

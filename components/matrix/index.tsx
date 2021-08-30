@@ -5,13 +5,12 @@ import { clamp, delta, useKeyPress, usePrevious } from 'common/helpers';
 import {
   Area,
   Coordinates,
-  createMatrixSquare,
   IMatrixSquare,
   MouseButton
 } from 'common/interfaces';
 import React, { useEffect, useRef, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
-import { applyStyle, useStore } from '../../common/store';
+import { useStore } from '../../common/store';
 import { MatrixCanvas } from './canvas';
 import Matrices from './methods';
 import { MatrixSquare } from './square';
@@ -29,16 +28,16 @@ export default function Terminal(props: { className?: string }) {
   } = useStore();
   const [cursor, setCursor] = useState<Coordinates | undefined>();
   const [cursorStyle, setCursorStyle] = useState(
-    applyStyle(editor, createMatrixSquare())
+    Matrices.squares.style(editor, Matrices.squares.create())
   );
 
   // match cursor style to that of the currently hovered character, but with
   // current editor styles applied, to preview what it'd look like
   useEffect(() => {
     setCursorStyle(
-      applyStyle(
+      Matrices.squares.style(
         editor,
-        createMatrixSquare({ character: selectedSpecialCharacter || ' ' })
+        Matrices.squares.create({ character: selectedSpecialCharacter || ' ' })
       )
     );
   }, [editor, selectedSpecialCharacter]);
@@ -59,7 +58,7 @@ export default function Terminal(props: { className?: string }) {
   // We need to know the width & height of one of these MatrixSquares
   // since they use ch/rems for dimensions, which we'll need in px to
   // find x,y position of square in the grid
-  const hiddenSquareProps = createMatrixSquare({ character: 'X' });
+  const hiddenSquareProps = Matrices.squares.create({ character: 'X' });
   const [hiddenSquareRef, { width, height }] = useDimensions();
 
   const handleMouseMove = (mouse: Coordinates) => {
@@ -301,7 +300,8 @@ export default function Terminal(props: { className?: string }) {
 
   return (
     <div>
-      <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
+      {/* debugging utility stuff */}
+      {/* <p className="p-4 bg-white absolute top-4 right-4 rounded shadow w-96">
         cursor: {cursor?.x},{cursor?.y}
         <br />
         selection start: {selectionStartPoint?.x},{selectionStartPoint?.y}
@@ -316,7 +316,7 @@ export default function Terminal(props: { className?: string }) {
         <br />
         stored selection: {storeSelection?.x},{storeSelection?.y},
         {storeSelection?.w},{storeSelection?.h}
-      </p>
+      </p> */}
 
       {/* Our reference element to capture px dimensions of ch / rem value, hidden for UI */}
       <MatrixSquare

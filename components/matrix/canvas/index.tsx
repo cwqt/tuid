@@ -3,16 +3,17 @@ import { delta } from 'common/helpers';
 import {
   Area,
   Coordinates,
-  createMatrixSquare,
   Dimensions,
   MouseButton,
   TerminalMatrix
 } from 'common/interfaces';
 import { useStore } from 'common/store';
-import React, { MouseEventHandler } from 'react';
-import { useEffect } from 'react';
-import { useRef } from 'react';
-import { KeyboardEventHandler, MouseEvent } from 'react';
+import React, {
+  KeyboardEventHandler,
+  MouseEventHandler,
+  useEffect,
+  useRef
+} from 'react';
 import { createHiDPICanvas, getCanvasCoordinates } from './helpers';
 import { drawSquare } from './methods';
 
@@ -20,9 +21,10 @@ export interface MatrixCanvasProps {
   onMouseDown: (button: MouseButton) => void;
   onMouseMove: (coords: Coordinates) => void;
   onKeyDown: (key: string) => void;
+
+  // dynamically changing data
   cursor: Coordinates;
   characterDimensions: Dimensions;
-
   drag: { start: Coordinates; end: Coordinates } | undefined;
   selection: Area | undefined;
   activeSelection: Area | undefined;
@@ -47,16 +49,9 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
 
   const render = (cursor: Coordinates) => {
     if (!contextRef.current) return;
+    const { w, h } = props.characterDimensions;
     const ctx = contextRef.current;
 
-    const { w, h } = props.characterDimensions;
-
-    ctx.font = '14px Roboto Mono';
-    // draw the background colour
-    ctx.fillStyle = terminalBackgroundColor;
-    ctx.fillRect(0, 0, matrix[0].length * w, matrix.length * h);
-
-    // draw all matrix grid squares
     const squares = (offset: Coordinates, matrix: TerminalMatrix) =>
       matrix.forEach((row, y) =>
         row.forEach(
@@ -71,8 +66,14 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
         )
       );
 
+    // draw the background colour
+    ctx.fillStyle = terminalBackgroundColor;
+    ctx.fillRect(0, 0, matrix[0].length * w, matrix.length * h);
+
+    // draw all the the matrix squares
     squares({ x: 0, y: 0 }, matrix);
 
+    // draw in-progress selection
     if (props.activeSelection) {
       ctx.strokeStyle = '#fff';
       ctx.setLineDash([]);
@@ -84,6 +85,7 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
       );
     }
 
+    // draw set selection outline
     if (props.selection) {
       ctx.setLineDash([3]);
       ctx.strokeStyle = '#fff';
@@ -95,6 +97,7 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
       );
     }
 
+    // drag dragged area outline & preview of slice
     if (props.drag) {
       const d = delta(props.drag.start, props.drag.end);
 

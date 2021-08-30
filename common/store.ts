@@ -4,13 +4,13 @@ import create from 'zustand';
 import update from 'immutability-helper';
 import compression from './compression';
 import {
-  createMatrixSquare,
   ExportedState,
   IEditorOptions,
   IMatrixSquare,
   Area,
   TerminalMatrix
 } from './interfaces';
+import Matrices from '../components/matrix/methods';
 
 // matrix is a 2d array, filled with holes of undefined
 // [_,_,_,a,b,c],
@@ -19,20 +19,6 @@ import {
 // [_,_,_,h,i,j]
 // only rendering filled holes saves us a tonne
 // on memory & rendering speed
-
-export const applyStyle = (
-  editor: IEditorOptions,
-  square: IMatrixSquare
-): IMatrixSquare => ({
-  __id: square.__id,
-  character: square.character,
-  foreground: editor.foreground,
-  background: editor.background,
-  underline: editor.underline,
-  strikeout: editor.strikeout,
-  bold: editor.bold,
-  italic: editor.italic
-});
 
 export interface IStore {
   fileTitle: string;
@@ -80,18 +66,7 @@ export const useStore = create<IStore>(set => ({
       matrix: update(state.matrix, {
         [y]: {
           [x]: {
-            $set: data
-              ? // input data exists, check if square exists for overwrite or create
-                state.matrix[y][x]
-                ? // overwrite
-                  {
-                    ...applyStyle(state.editor, state.matrix[y][x]),
-                    ...data // explicit over-write
-                  }
-                : // no square, create new at this point
-                  applyStyle(state.editor, createMatrixSquare(data))
-              : // for no data we're removing the grid square from the matrix
-                null
+            $set: Matrices.squares.set(x, y, data, state.matrix, state.editor)
           }
         }
       })
