@@ -35,7 +35,6 @@ import { css, cx } from '@emotion/css';
 import dynamic from 'next/dynamic';
 import React, { useEffect } from 'react';
 import { useStore } from '../common/store';
-import Matrices from '../components/matrix/methods';
 import Sidebar from '../components/sidebar';
 
 import README from '../README.tui';
@@ -61,8 +60,8 @@ export default function Home() {
               'm-4 shadow rounded',
               css({ minWidth: '340px', maxWidth: '340px' })
             )}
-          ></Sidebar>
-          <TerminalNoSSR className="h-full flex-shrink-1"></TerminalNoSSR>
+          />
+          <TerminalNoSSR className="h-full flex-shrink-1" />
         </>
       )}
     </div>

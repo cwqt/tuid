@@ -12,6 +12,7 @@ import { useStore } from '../../common/store';
 import { MatrixCanvas } from './canvas';
 import Matrices from './methods';
 import { MatrixSquare } from './square';
+import { KeyboardEvent } from 'react';
 
 export default function Terminal(props: { className?: string }) {
   const {
@@ -152,55 +153,72 @@ export default function Terminal(props: { className?: string }) {
 
   // Listen for keyboard events to insert characters into the matrix
   const handleKeyDown = useCallback(
-    (key: string) => {
+    (event: KeyboardEvent) => {
       if (storeSelection || !cursor) return;
       const { x, y } = cursor;
 
       // Only handle keypresses if the mouse is currently over this grid square
-      switch (key) {
-        case 'Delete': {
-          const { x: nx, y: ny } = Matrices.position.cols.advance(
-            { x, y },
-            matrix
-          );
-          setCursor({ x: nx, y: ny });
-          setMatrixSquareProperty(nx, ny, null);
-          break;
+      if (event.metaKey) {
+        switch (event.key) {
+          case 'z': {
+            console.log('undo');
+            break;
+          }
+          case 'c': {
+            console.log('copy');
+            break;
+          }
+          case 'x': {
+            console.log('cut');
+            break;
+          }
         }
-        case 'Backspace': {
-          const { x: nx, y: ny } = Matrices.position.cols.retreat(
-            { x, y },
-            matrix
-          );
-          setCursor({ x: nx, y: ny });
-          setMatrixSquareProperty(nx, ny, null);
-          break;
+      } else {
+        switch (event.key) {
+          case 'Delete': {
+            const { x: nx, y: ny } = Matrices.position.cols.advance(
+              { x, y },
+              matrix
+            );
+            setCursor({ x: nx, y: ny });
+            setMatrixSquareProperty(nx, ny, null);
+            break;
+          }
+          case 'Backspace': {
+            const { x: nx, y: ny } = Matrices.position.cols.retreat(
+              { x, y },
+              matrix
+            );
+            setCursor({ x: nx, y: ny });
+            setMatrixSquareProperty(nx, ny, null);
+            break;
+          }
+          case 'ArrowDown':
+            setCursor(Matrices.position.rows.advance({ x, y }, matrix));
+            break;
+          case 'ArrowUp':
+            setCursor(Matrices.position.rows.retreat({ x, y }, matrix));
+            break;
+          case 'ArrowLeft':
+            setCursor(Matrices.position.cols.retreat({ x, y }, matrix));
+            break;
+          case 'ArrowRight':
+            setCursor(Matrices.position.cols.advance({ x, y }, matrix));
+            break;
+          case 'Shift':
+          case 'Meta':
+          case 'Alt':
+          case 'Control':
+          case 'Enter':
+          case 'Tab':
+          case 'CapsLock':
+          case 'Escape':
+            // ignore these
+            break;
+          default:
+            setMatrixSquareProperty(x, y, { character: event.key });
+            setCursor(Matrices.position.cols.advance({ x, y }, matrix));
         }
-        case 'ArrowDown':
-          setCursor(Matrices.position.rows.advance({ x, y }, matrix));
-          break;
-        case 'ArrowUp':
-          setCursor(Matrices.position.rows.retreat({ x, y }, matrix));
-          break;
-        case 'ArrowLeft':
-          setCursor(Matrices.position.cols.retreat({ x, y }, matrix));
-          break;
-        case 'ArrowRight':
-          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
-          break;
-        case 'Shift':
-        case 'Meta':
-        case 'Alt':
-        case 'Control':
-        case 'Enter':
-        case 'Tab':
-        case 'CapsLock':
-        case 'Escape':
-          // ignore these
-          break;
-        default:
-          setMatrixSquareProperty(x, y, { character: key });
-          setCursor(Matrices.position.cols.advance({ x, y }, matrix));
       }
     },
     [matrix, cursor, storeSelection]

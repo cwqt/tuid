@@ -9,19 +9,21 @@ import {
 } from 'common/interfaces';
 import { useStore } from 'common/store';
 import React, {
+  KeyboardEvent,
   KeyboardEventHandler,
   MouseEventHandler,
   useEffect,
-  useRef
+  useRef,
+  useState
 } from 'react';
 import { createHiDPICanvas, getCanvasCoordinates } from './helpers';
-import { drawSquare } from './methods';
+import { DEFAULT_FONT, drawSquare } from './methods';
 
 export interface MatrixCanvasProps {
   onMouseDown?: (button: MouseButton) => void;
   onMouseMove?: (coords: Coordinates) => void;
-  onKeyDown?: (key: string) => void;
-  onKeyUp?: (key: string) => void;
+  onKeyDown?: (key: KeyboardEvent) => void;
+  onKeyUp?: (key: KeyboardEvent) => void;
 
   // dynamically changing data
   cursor: Coordinates;
@@ -34,6 +36,8 @@ export interface MatrixCanvasProps {
 
 export const MatrixCanvas = (props: MatrixCanvasProps) => {
   const { matrix, terminalBackgroundColor } = useStore();
+
+  const [isFontReady, setIsFontReady] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D>(null);
@@ -68,6 +72,8 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
       }
     };
 
+    ctx.font = DEFAULT_FONT;
+
     // draw the background colour
     ctx.fillStyle = terminalBackgroundColor;
     ctx.fillRect(0, 0, matrix[0].length * w, matrix.length * h);
@@ -97,6 +103,19 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
         props.selection.w * w,
         props.selection.h * h
       );
+
+      // add a dark overlay across the selected area when dragging selection
+      if (props.drag) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(
+          props.selection.x * w,
+          props.selection.y * h,
+          props.selection.w * w,
+          props.selection.h * h
+        );
+        ctx.globalAlpha = 1;
+      }
     }
 
     // drag dragged area outline & preview of slice
@@ -143,13 +162,17 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
   const handleMouseDown: MouseEventHandler = event =>
     props.onMouseDown?.(event.button);
 
-  const handleKeyDown: KeyboardEventHandler = event =>
-    props.onKeyDown?.(event.key);
+  const handleKeyDown: KeyboardEventHandler = event => props.onKeyDown?.(event);
 
-  const handleKeyUp: KeyboardEventHandler = event => props.onKeyUp?.(event.key);
+  const handleKeyUp: KeyboardEventHandler = event => props.onKeyUp?.(event);
 
-  // on initial load or dimensions change, create the canvas
-  useEffect(create, []);
+  // on initial load or dimensions change, create the canvas, but wait for font
+  // to be loaded first - otherwise you get unstyled ugly text
+  useEffect(() => {
+    document['fonts']
+      .load('12px Roboto Mono')
+      .then(() => (setIsFontReady(true), create(), render({ x: 0, y: 0 })));
+  }, []);
 
   // trigger a re-render whenever any of these values change
   useEffect(
@@ -159,21 +182,24 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
 
   return (
     <div
+      id="matrix-canvas"
       onContextMenu={e => e.preventDefault()}
       className={cx(
         'p-2 rounded-md shadow',
         css({ backgroundColor: terminalBackgroundColor })
       )}
     >
-      <canvas
-        ref={canvasRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        tabIndex={1}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
-        onContextMenu={e => e.preventDefault()}
-      />
+      {isFontReady && (
+        <canvas
+          ref={canvasRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          tabIndex={1}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
+          onContextMenu={e => e.preventDefault()}
+        />
+      )}
     </div>
   );
 };

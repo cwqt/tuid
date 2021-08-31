@@ -17,6 +17,8 @@ const makeFont = (
   return font;
 };
 
+export const DEFAULT_FONT = makeFont('Roboto Mono', 13, false, false);
+
 const borders = Object.values(Borders)
   .map(b => b.flat())
   .flat()
