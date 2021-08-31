@@ -16,6 +16,7 @@ import React, {
   useRef,
   useState
 } from 'react';
+import { IMatrixDrag } from '../methods';
 import { createHiDPICanvas, getCanvasCoordinates } from './helpers';
 import { DEFAULT_FONT, drawSquare } from './methods';
 
@@ -28,10 +29,9 @@ export interface MatrixCanvasProps {
   // dynamically changing data
   cursor: Coordinates;
   characterDimensions: Dimensions;
-  drag: { start: Coordinates; end: Coordinates } | undefined;
+  drag: IMatrixDrag | undefined;
   selection: Area | undefined;
   activeSelection: Area | undefined;
-  dragSlice: TerminalMatrix;
 }
 
 export const MatrixCanvas = (props: MatrixCanvasProps) => {
@@ -93,7 +93,7 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
       );
     }
 
-    // draw set selection outline
+    // draw selection outline
     if (props.selection) {
       ctx.setLineDash([3]);
       ctx.strokeStyle = '#fff';
@@ -122,29 +122,32 @@ export const MatrixCanvas = (props: MatrixCanvasProps) => {
     if (props.drag) {
       const d = delta(props.drag.start, props.drag.end);
 
+      // fill background behind drag preview
       ctx.fillStyle = terminalBackgroundColor;
       ctx.fillRect(
-        (props.selection.x + d.x) * w,
-        (props.selection.y + d.y) * h,
-        props.selection.w * w,
-        props.selection.h * h
+        (props.drag.bounding_box.x + d.x) * w,
+        (props.drag.bounding_box.y + d.y) * h,
+        props.drag.bounding_box.w * w,
+        props.drag.bounding_box.h * h
       );
 
+      // draw slice preview
+      squares(
+        delta(props.drag.start, {
+          x: props.drag.end.x + props.drag.bounding_box.x,
+          y: props.drag.end.y + props.drag.bounding_box.y
+        }),
+        props.drag.slice
+      );
+
+      // set pink dotted border of preview
       ctx.setLineDash([3]);
       ctx.strokeStyle = 'rgb(236, 72, 153)';
       ctx.strokeRect(
-        (props.selection.x + d.x) * w,
-        (props.selection.y + d.y) * h,
-        props.selection.w * w,
-        props.selection.h * h
-      );
-
-      squares(
-        delta(props.drag.start, {
-          x: props.drag.end.x + props.selection.x,
-          y: props.drag.end.y + props.selection.y
-        }),
-        props.dragSlice
+        (props.drag.bounding_box.x + d.x) * w,
+        (props.drag.bounding_box.y + d.y) * h,
+        props.drag.bounding_box.w * w,
+        props.drag.bounding_box.h * h
       );
     }
 

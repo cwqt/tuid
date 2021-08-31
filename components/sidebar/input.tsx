@@ -57,10 +57,17 @@ export default function InputSidebar(props: { className?: string }) {
     // left border
     for (let y = 0; y < s.h; y++) set(0, y, border[1][0]);
 
-    set(0, 0, border[0][0]); // top-left corner
-    set(s.w - 1, 0, border[0][2]); // top-right corner
-    set(0, s.h - 1, border[2][0]); // bottom-left corner
-    set(s.w - 1, s.h - 1, border[2][2]); // bottom-right corner
+    // add corners for box selections
+    if (selection.h > 1) {
+      set(0, 0, border[0][0]); // top-left corner
+      set(s.w - 1, 0, border[0][2]); // top-right corner
+      set(0, s.h - 1, border[2][0]); // bottom-left corner
+      set(s.w - 1, s.h - 1, border[2][2]); // bottom-right corner
+    } else {
+      // straight line draw
+      set(0, 0, border[1][0]);
+      set(s.w - 1, s.h - 1, border[1][2]);
+    }
 
     setMatrix(Matrices.insert(matrix, slice, selection));
   };

@@ -7,6 +7,13 @@ import {
 } from 'common/interfaces';
 import { nanoid } from 'nanoid';
 
+export interface IMatrixDrag {
+  slice: TerminalMatrix; // slice of the matrix being dragged
+  bounding_box: Area; // bounding box of the drag area
+  start: Coordinates; // where in the bounding box area was clicked
+  end: Coordinates; // where the current dragging end (the current cursor) is
+}
+
 const create = (
   width: number,
   height: number,

@@ -4,13 +4,14 @@ import {
   Area,
   Coordinates,
   IMatrixSquare,
-  MouseButton
+  MouseButton,
+  TerminalMatrix
 } from 'common/interfaces';
 import React, { useCallback, useEffect, useState } from 'react';
 import useDimensions from 'react-use-dimensions';
 import { useStore } from '../../common/store';
 import { MatrixCanvas } from './canvas';
-import Matrices from './methods';
+import Matrices, { IMatrixDrag } from './methods';
 import { MatrixSquare } from './square';
 import { KeyboardEvent } from 'react';
 
@@ -38,18 +39,7 @@ export default function Terminal(props: { className?: string }) {
 
   // holds the current state of if a drag action is taking place using a start & end we can find a
   // delta to move all contents by at the end of a drag
-  const [activeDrag, setActiveDrag] = useState<
-    | {
-        start: Coordinates; // where in the bounding box area was clicked
-        end: Coordinates; // where the current dragging end (the current cursor) is
-      }
-    | undefined
-  >();
-
-  // sub-section of the matrix that is currently being dragged around
-  const [activeDragMatrixSlice, setActiveDragMatrixSlice] = useState<
-    IMatrixSquare[][] | undefined
-  >();
+  const [activeDrag, setActiveDrag] = useState<IMatrixDrag | undefined>();
 
   // move the cursor grid position according to the mouse px position within the canvas
   const handleMouseMove = useCallback(
@@ -115,38 +105,44 @@ export default function Terminal(props: { className?: string }) {
             if (slice.flat().every(v => v == null)) return endSelection();
 
             // begin the drag!
-            setActiveDragMatrixSlice(slice);
-            setActiveDrag({
+            return setActiveDrag({
               start: { x: c.x, y: c.y },
-              end: { x: c.x, y: c.y }
+              end: { x: c.x, y: c.y },
+              slice: slice,
+              bounding_box: { ...s }
             });
           } else {
             // clicked outside region, ending selection
-            endSelection();
+            return endSelection();
           }
-        } else {
-          // there is an active drag in progress, and this click is putting it down
-          const { start, end } = activeDrag;
-
-          // is the translation vector of the drag
-          const { x: dx, y: dy } = delta(start, end);
-
-          // new position vector of the selected region
-          const [nx, ny] = [storeSelection.x + dx, storeSelection.y + dy];
-
-          // set the terminal matrix
-          setMatrix(
-            // insert sub-matrix into matrix
-            Matrices.insert(
-              // remove the now dragged area from matrix
-              Matrices.remove(matrix, storeSelection),
-              activeDragMatrixSlice,
-              { x: nx, y: ny }
-            )
-          );
-
-          endDrag();
         }
+      }
+
+      // activeDrag can be from clipboard paste or selection move
+      if (activeDrag) {
+        // is the translation vector of the drag
+        const { x: dx, y: dy } = delta(activeDrag.start, activeDrag.end);
+
+        // new position vector of the selected region
+        const [nx, ny] = [
+          activeDrag.bounding_box.x + dx,
+          activeDrag.bounding_box.y + dy
+        ];
+
+        // set the terminal matrix
+        setMatrix(
+          // insert sub-matrix into matrix
+          Matrices.insert(
+            // if there's a selection then we're dragging an area around, then we
+            // need to remove that selected area and replace it with this area
+            // if not this is a paste insert
+            storeSelection ? Matrices.remove(matrix, storeSelection) : matrix,
+            activeDrag.slice,
+            { x: nx, y: ny }
+          )
+        );
+
+        endDrag();
       }
     }
   };
@@ -160,12 +156,38 @@ export default function Terminal(props: { className?: string }) {
       // Only handle keypresses if the mouse is currently over this grid square
       if (event.metaKey) {
         switch (event.key) {
-          case 'z': {
-            console.log('undo');
-            break;
-          }
           case 'c': {
             console.log('copy');
+            break;
+          }
+          case 'v': {
+            console.log('paste');
+            navigator.clipboard
+              .readText()
+              .then(text => {
+                const body = text.split('\n');
+                const slice = Array.from({ length: body.length }, (_, y) =>
+                  Array.from({ length: body[0].length }, (_, x) =>
+                    Matrices.squares.create({ character: body[y][x] })
+                  )
+                );
+
+                setActiveDrag({
+                  start: cursor,
+                  end: cursor,
+                  slice: slice,
+                  bounding_box: {
+                    x: cursor.x,
+                    y: cursor.y,
+                    w: slice[0].length,
+                    h: slice.length
+                  }
+                });
+              })
+              .catch(err => {
+                console.error(err);
+              });
+
             break;
           }
           case 'x': {
@@ -250,7 +272,7 @@ export default function Terminal(props: { className?: string }) {
     // update active drag end point to mirror cursor position when it moves
     if (activeDrag) {
       setActiveDrag({
-        start: activeDrag.start,
+        ...activeDrag,
         end: { x: cursor.x, y: cursor.y }
       });
     }
@@ -264,7 +286,6 @@ export default function Terminal(props: { className?: string }) {
 
   const endDrag = useCallback(() => {
     setStoreSelection(undefined);
-    setActiveDragMatrixSlice(undefined);
     setActiveDrag(undefined);
   }, []);
 
@@ -302,7 +323,6 @@ export default function Terminal(props: { className?: string }) {
             selection={storeSelection}
             activeSelection={activeSelection}
             drag={activeDrag}
-            dragSlice={activeDragMatrixSlice}
             cursor={cursor}
           ></MatrixCanvas>
         )}
